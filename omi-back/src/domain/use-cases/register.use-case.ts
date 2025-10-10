@@ -1,0 +1,31 @@
+import jwt from 'jsonwebtoken';
+import { User } from '../entities/user.entity';
+import { IUserRepository } from '../repositories/user.repository';
+import { config } from '../../config';
+
+export class RegisterUseCase {
+  constructor(private userRepository: IUserRepository) {}
+
+  async execute(email: string, password: string) {
+    // Check if user already exists
+    const existingUser = await this.userRepository.existsByEmail(email);
+    if (existingUser) {
+      throw new Error('User already exists');
+    }
+
+    // Create new user
+    const user = await User.create(email, password);
+    const savedUser = await this.userRepository.save(user);
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: savedUser.id, email: savedUser.email },
+      config.jwt.secret
+    );
+
+    return {
+      user: savedUser.toJSON(),
+      token,
+    };
+  }
+}
