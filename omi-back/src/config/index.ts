@@ -16,4 +16,8 @@ export const config = {
   cors: {
     origin: process.env['CORS_ORIGIN'] || 'http://localhost:3000',
   },
+  pexels: {
+    apiKey: process.env['PEXELS_API_KEY'] || '',
+    baseUrl: 'https://api.pexels.com/v1',
+  },
 } as const;
