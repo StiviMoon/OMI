@@ -20,7 +20,7 @@
 
 ## 📋 Descripción
 
-OMI es una plataforma de películas full-stack desarrollada con las últimas tecnologías web. Combina un frontend moderno y responsivo con Next.js 15 y un backend robusto con Express.js siguiendo principios de Clean Architecture.
+OMI es una plataforma de películas full-stack desarrollada con las últimas tecnologías web.
 
 ## ✨ Características
 
