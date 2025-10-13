@@ -16,10 +16,6 @@ export function useVideos({ type, searchParams, popularParams, query }: UseVideo
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Stringify params to use as stable dependencies
-  const searchParamsStr = JSON.stringify(searchParams);
-  const popularParamsStr = JSON.stringify(popularParams);
-
   useEffect(() => {
     async function fetchVideos() {
       try {
@@ -60,7 +56,8 @@ export function useVideos({ type, searchParams, popularParams, query }: UseVideo
     }
 
     fetchVideos();
-  }, [type, query, searchParamsStr, popularParamsStr, searchParams, popularParams]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [type, query]);
 
   return { movies, loading, error };
 }
