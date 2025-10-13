@@ -16,6 +16,10 @@ export function useVideos({ type, searchParams, popularParams, query }: UseVideo
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Stringify params to use as stable dependencies
+  const searchParamsStr = JSON.stringify(searchParams);
+  const popularParamsStr = JSON.stringify(popularParams);
+
   useEffect(() => {
     async function fetchVideos() {
       try {
@@ -56,7 +60,7 @@ export function useVideos({ type, searchParams, popularParams, query }: UseVideo
     }
 
     fetchVideos();
-  }, [type, query, JSON.stringify(searchParams), JSON.stringify(popularParams)]);
+  }, [type, query, searchParamsStr, popularParamsStr, searchParams, popularParams]);
 
   return { movies, loading, error };
 }
@@ -91,7 +95,7 @@ export function useFeaturedVideo() {
   return { featured, loading, error };
 }
 
-export function useVideoById(id: string | any) {
+export function useVideoById(id: string | null) {
   const [video, setVideo] = useState<Movie | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -105,7 +109,8 @@ export function useVideoById(id: string | any) {
     async function fetchVideo() {
       try {
         setLoading(true);
-        const data = await videosAPI.getById(id);
+        // Type assertion safe because we checked !id above
+        const data = await videosAPI.getById(id as string);
         setVideo(data);
       } catch (err) {
         setError('Error al cargar video');

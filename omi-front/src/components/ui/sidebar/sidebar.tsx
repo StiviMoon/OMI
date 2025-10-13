@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { Search, Film, Tv, Baby, Zap, History, User, Menu, X } from 'lucide-react';
 import { SidebarItem } from './SidebarItem';
 import { SearchModal } from './SearchModal';
 import { Movie } from '@/lib/types';
-import { Button } from '@/components/ui/button';
 
 interface SidebarProps {
   onVideoSelect?: (movie: Movie) => void;
@@ -74,10 +74,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ onVideoSelect }) => {
         <nav className="flex flex-col h-full py-4">
           {/* Logo Section */}
           <div className="flex items-center justify-center px-4 mb-6">
-            <img 
+            <Image 
               src="/logo.png" 
               alt="Logo" 
+              width={64}
+              height={64}
               className="w-12 h-12 md:w-10 md:h-10 lg:w-16 lg:h-16 object-contain"
+              priority
             />
           </div>
           

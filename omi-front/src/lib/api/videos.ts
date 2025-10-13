@@ -5,15 +5,6 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
   ? `${process.env.NEXT_PUBLIC_API_URL}/api/videos`
   : 'http://localhost:3001/api/videos';
 
-// Configuración de límites para evitar exceder el rate limit de Pexels
-const LIMITS = {
-  DEFAULT_PER_PAGE: 10,      // Cantidad por defecto por petición
-  MAX_PER_PAGE: 15,          // Máximo permitido por petición
-  FEATURED_COUNT: 1,         // Videos para el hero banner
-  CATEGORY_COUNT: 12,        // Videos por categoría
-  SEARCH_COUNT: 10,          // Resultados de búsqueda por defecto
-} as const;
-
 // Tipos de respuesta de tu backend (basados en Pexels)
 interface VideoFile {
   quality: string;
@@ -58,7 +49,7 @@ interface SingleVideoResponse {
 }
 
 // Función para construir query params
-function buildQueryString(params: Record<string, any>): string {
+function buildQueryString(params: Record<string, string | number | boolean | undefined | null>): string {
   const query = new URLSearchParams();
   
   Object.entries(params).forEach(([key, value]) => {
@@ -71,7 +62,7 @@ function buildQueryString(params: Record<string, any>): string {
 }
 
 // Función para hacer fetch con manejo de errores mejorado
-async function fetchAPI<T>(endpoint: string, params?: Record<string, any>): Promise<T> {
+async function fetchAPI<T>(endpoint: string, params?: Record<string, string | number | boolean | undefined | null>): Promise<T> {
   const queryString = params ? `?${buildQueryString(params)}` : '';
   const url = `${API_BASE_URL}${endpoint}${queryString}`;
 
@@ -111,7 +102,7 @@ async function fetchAPI<T>(endpoint: string, params?: Record<string, any>): Prom
     let jsonData;
     try {
       jsonData = JSON.parse(responseText);
-    } catch (e) {
+    } catch {
       console.error('❌ Failed to parse JSON:', responseText);
       throw new Error('Invalid JSON response from server');
     }
@@ -157,7 +148,7 @@ export const videosAPI = {
   async search(params: SearchParams): Promise<Movie[]> {
     try {
       console.log('🔎 Searching videos with params:', params);
-      const data = await fetchAPI<BackendResponse>('/search', params);
+      const data = await fetchAPI<BackendResponse>('/search', params as unknown as Record<string, string | number | boolean | undefined | null>);
       
       console.log('📊 Search response:', data);
       
@@ -180,7 +171,7 @@ export const videosAPI = {
   async getPopular(params?: PopularParams): Promise<Movie[]> {
     try {
       console.log('🔥 Fetching popular videos with params:', params);
-      const data = await fetchAPI<BackendResponse>('/popular', params);
+      const data = await fetchAPI<BackendResponse>('/popular', params as unknown as Record<string, string | number | boolean | undefined | null> | undefined);
       
       console.log('📊 Popular response:', data);
       

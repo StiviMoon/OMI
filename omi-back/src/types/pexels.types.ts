@@ -1,8 +1,12 @@
+// Video Quality Types
+export type VideoQuality = 'hd' | 'sd' | 'uhd' | '4k';
+export type VideoFileType = 'video/mp4' | 'video/webm' | 'video/ogg';
+
 // Video File Types
 export interface VideoFile {
   id: number;
-  quality: string; // 'hd' | 'sd' | 'uhd' | '4k'
-  file_type: string; // 'video/mp4'
+  quality: VideoQuality;
+  file_type: VideoFileType;
   width: number;
   height: number;
   fps: number;
@@ -61,11 +65,12 @@ export interface PexelsPopularVideosResponse {
   prev_page?: string;
 }
 
-// API Response Wrapper
-export interface ApiResponse<T> {
+// API Response wrapper específico para Pexels (renombrado para evitar conflicto)
+export interface PexelsApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   message?: string;
+  error?: string;
 }
 
 // Simplified Video for Frontend
@@ -81,11 +86,51 @@ export interface SimplifiedVideo {
     name: string;
     url: string;
   };
-  files: {
-    quality: string;
-    width: number;
-    height: number;
-    link: string;
-  }[];
+  files: SimplifiedVideoFile[];
+}
+
+// Simplified Video File for Frontend
+export interface SimplifiedVideoFile {
+  quality: VideoQuality;
+  width: number;
+  height: number;
+  link: string;
+}
+
+// Video Search/Popular Response for Frontend
+export interface VideoListResponse {
+  page: number;
+  perPage: number;
+  totalResults: number;
+  videos: SimplifiedVideo[];
+  hasMore: boolean;
+}
+
+// Single Video Response for Frontend
+export interface SingleVideoResponse {
+  video: SimplifiedVideo;
+}
+
+// Search/Popular Query Parameters
+export type VideoOrientation = 'landscape' | 'portrait' | 'square';
+export type VideoSize = 'large' | 'medium' | 'small';
+
+export interface SearchQueryParams {
+  query?: string;
+  page?: string;
+  per_page?: string;
+  orientation?: string;
+  size?: string;
+  min_duration?: string;
+  max_duration?: string;
+}
+
+export interface PopularQueryParams {
+  page?: string;
+  per_page?: string;
+  min_width?: string;
+  min_height?: string;
+  min_duration?: string;
+  max_duration?: string;
 }
 

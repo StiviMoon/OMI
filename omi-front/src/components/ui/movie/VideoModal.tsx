@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { X, Play, Plus, Check } from 'lucide-react';
+import { X, Plus, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface VideoModalProps {

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Search, X, Loader2, Film, SlidersHorizontal } from 'lucide-react';
 import { videosAPI } from '@/lib/api/videos';
 import { Movie } from '@/lib/types';
@@ -36,6 +37,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onVid
     }, 500);
 
     return () => clearTimeout(timeoutId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, orientation, size, minDuration, maxDuration]);
 
   const handleSearch = async () => {
@@ -45,17 +47,24 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onVid
     setError('');
 
     try {
-      const params: any = {
+      const params: Partial<{
+        query: string;
+        per_page: number;
+        orientation: 'landscape' | 'portrait' | 'square';
+        size: 'large' | 'medium' | 'small';
+        min_duration: number;
+        max_duration: number;
+      }> = {
         query: searchQuery,
         per_page: 15,
       };
 
-      if (orientation) params.orientation = orientation;
-      if (size) params.size = size;
-      if (minDuration) params.min_duration = minDuration;
-      if (maxDuration) params.max_duration = maxDuration;
+      if (orientation) params.orientation = orientation as 'landscape' | 'portrait' | 'square';
+      if (size) params.size = size as 'large' | 'medium' | 'small';
+      if (minDuration) params.min_duration = parseInt(minDuration);
+      if (maxDuration) params.max_duration = parseInt(maxDuration);
 
-      const results = await videosAPI.search(params);
+      const results = await videosAPI.search(params as import('@/lib/types').SearchParams);
       setMovies(results);
     } catch (err) {
       console.error('❌ Error en búsqueda:', err);
@@ -141,7 +150,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onVid
                 </label>
                 <select
                   value={orientation}
-                  onChange={(e) => setOrientation(e.target.value as any)}
+                  onChange={(e) => setOrientation(e.target.value as 'landscape' | 'portrait' | 'square' | '')}
                   className="w-full bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 focus:outline-none focus:border-blue-500"
                 >
                   <option value="">Todas</option>
@@ -158,7 +167,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onVid
                 </label>
                 <select
                   value={size}
-                  onChange={(e) => setSize(e.target.value as any)}
+                  onChange={(e) => setSize(e.target.value as 'large' | 'medium' | 'small' | '')}
                   className="w-full bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 focus:outline-none focus:border-blue-500"
                 >
                   <option value="">Todos</option>
@@ -219,7 +228,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onVid
           ) : searchQuery && movies.length > 0 ? (
             <div className="space-y-3">
               <div className="text-gray-400 text-sm mb-4">
-                {movies.length} resultados para "{searchQuery}"
+                {movies.length} resultados para &quot;{searchQuery}&quot;
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -231,10 +240,12 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onVid
                   >
                     <div className="relative w-24 h-16 bg-gray-700 rounded flex-shrink-0 overflow-hidden">
                       {movie.posterUrl ? (
-                        <img 
+                        <Image 
                           src={movie.posterUrl} 
                           alt={movie.title}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform"
+                          fill
+                          sizes="96px"
+                          className="object-cover group-hover:scale-110 transition-transform"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
@@ -262,7 +273,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onVid
           ) : searchQuery && movies.length === 0 ? (
             <div className="text-center text-gray-500 py-8">
               <Search className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p>No se encontraron resultados para "{searchQuery}"</p>
+              <p>No se encontraron resultados para &quot;{searchQuery}&quot;</p>
             </div>
           ) : (
             <div className="text-center text-gray-500 py-8">

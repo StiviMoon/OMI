@@ -4,6 +4,7 @@ import React from 'react';
 import { Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import Image from 'next/image';
 
 interface HeroBannerProps {
   title: string;
@@ -26,10 +27,13 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
     ">
       {/* Background Image */}
       <div className="absolute inset-0 w-full">
-        <img 
+        <Image 
           src={backdropUrl} 
-          alt={title}
-          className="w-full h-full object-cover"
+          alt={title} 
+          fill
+          sizes="100vw"
+          className="object-cover"
+          priority
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black via-purple-900/60 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
