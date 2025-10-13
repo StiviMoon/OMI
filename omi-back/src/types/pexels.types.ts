@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // Video Quality Types
 export type VideoQuality = 'hd' | 'sd' | 'uhd' | '4k';
 export type VideoFileType = 'video/mp4' | 'video/webm' | 'video/ogg';
@@ -7,6 +8,13 @@ export interface VideoFile {
   id: number;
   quality: VideoQuality;
   file_type: VideoFileType;
+=======
+// Video File Types
+export interface VideoFile {
+  id: number;
+  quality: string; // 'hd' | 'sd' | 'uhd' | '4k'
+  file_type: string; // 'video/mp4'
+>>>>>>> 2fb44f65e610ec05145f5544ac5f946d4ef9c2a2
   width: number;
   height: number;
   fps: number;
@@ -65,12 +73,20 @@ export interface PexelsPopularVideosResponse {
   prev_page?: string;
 }
 
+<<<<<<< HEAD
 // API Response wrapper específico para Pexels (renombrado para evitar conflicto)
 export interface PexelsApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   message?: string;
   error?: string;
+=======
+// API Response Wrapper
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  message?: string;
+>>>>>>> 2fb44f65e610ec05145f5544ac5f946d4ef9c2a2
 }
 
 // Simplified Video for Frontend
