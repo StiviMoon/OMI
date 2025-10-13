@@ -37,6 +37,10 @@ export class DatabaseConnection {
         connectTimeoutMS: 10000,
         retryWrites: true,
         retryReads: true,
+        // TLS/SSL options to fix OpenSSL 3.x compatibility issues
+        tls: true,
+        tlsAllowInvalidCertificates: false,
+        tlsAllowInvalidHostnames: false,
       });
 
       // Connect the client to the server
