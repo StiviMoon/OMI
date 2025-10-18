@@ -3,7 +3,6 @@
 import React from 'react';
 import { Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 
 interface HeroBannerProps {
@@ -11,13 +10,21 @@ interface HeroBannerProps {
   description: string;
   backdropUrl: string;
   onPlay: () => void;
+  isPreview?: boolean;
+  badgeText?: string;
+  badgeColor?: string;
+  titleColor?: string;
+  customButton?: React.ReactNode;
 }
 
 export const HeroBanner: React.FC<HeroBannerProps> = ({ 
   title, 
   description, 
   backdropUrl, 
-  onPlay, 
+  onPlay,
+  isPreview = false,
+  titleColor = 'text-pink-500',
+  customButton
 }) => {
   return (
     <section className="
@@ -27,12 +34,12 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
     ">
       {/* Background Image */}
       <div className="absolute inset-0 w-full">
-        <Image 
-          src={backdropUrl} 
-          alt={title} 
+        <Image
+          src={backdropUrl}
+          alt={title}
           fill
-          sizes="100vw"
           className="object-cover"
+          loading="eager"
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black via-purple-900/60 to-transparent" />
@@ -47,18 +54,12 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
         <div className="
           w-full sm:max-w-xl lg:max-w-2xl
         ">
-          <Badge className="
-            mb-2 sm:mb-3 lg:mb-4 
-            bg-pink-600 hover:bg-pink-700 text-white border-0
-            text-xs sm:text-sm
-          ">
-            NUEVO
-          </Badge>
-          <h1 className="
-            font-bold text-pink-500 drop-shadow-2xl
+          
+          <h1 className={`
+            font-bold ${titleColor} drop-shadow-2xl
             text-3xl sm:text-5xl lg:text-7xl
             mb-2 sm:mb-3 lg:mb-4
-          ">
+          `}>
             {title}
           </h1>
           <p className="
@@ -69,19 +70,22 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
             {description}
           </p>
           <div className="flex gap-3 sm:gap-4">
-            <Button 
-              size="default"
-              className="
-                bg-white text-black hover:bg-gray-200 font-semibold
-                text-sm sm:text-base
-                h-9 sm:h-10 lg:h-11
-                px-4 sm:px-5 lg:px-6
-              "
-              onClick={onPlay}
-            >
-              <Play className="mr-2 h-4 w-4 sm:h-5 sm:w-5 fill-black" />
-              Reproducir
-            </Button>
+            {!isPreview && (
+              <Button 
+                size="default"
+                className="
+                  bg-white text-black hover:bg-gray-200 font-semibold
+                  text-sm sm:text-base
+                  h-9 sm:h-10 lg:h-11
+                  px-4 sm:px-5 lg:px-6
+                "
+                onClick={onPlay}
+              >
+                <Play className="mr-2 h-4 w-4 sm:h-5 sm:w-5 fill-black" />
+                Reproducir
+              </Button>
+            )}
+            {customButton}
           </div>
         </div>
       </div>

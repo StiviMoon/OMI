@@ -1,29 +1,83 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import { Search, Film, Tv, Baby, Zap, History, User, Menu, X } from 'lucide-react';
+import { Search, Film, Tv, Baby, Zap, History, User, Menu, X, HandHeart } from 'lucide-react';
+import { useRouter, usePathname } from 'next/navigation';
 import { SidebarItem } from './SidebarItem';
 import { SearchModal } from './SearchModal';
 import { Movie } from '@/lib/types';
+import ModalCuenta from '../Cuenta/ModalCuenta';
 
 interface SidebarProps {
   onVideoSelect?: (movie: Movie) => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ onVideoSelect }) => {
-  const [activeItem, setActiveItem] = useState('PELICULA');
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // Determinar el item activo basado en la ruta actual
+  const getActiveItem = useCallback(() => {
+    if (pathname === '/about') return 'Sobre Nosotros';
+    if (pathname === '/videos') return 'PELICULA';
+    if (pathname === '/historial') return 'HISTORIAL';
+    if (pathname === '/series') return 'SERIES';
+    if (pathname === '/ninos') return 'NIÑOS';
+    if (pathname === '/anime') return 'ANIME';
+    return 'PELICULA'; // Default
+  }, [pathname]);
+
+  const [activeItem, setActiveItem] = useState(getActiveItem());
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCuentaModalOpen, setIsCuentaModalOpen] = useState(false);
+
+  // Sincronizar activeItem cuando cambie la ruta
+  useEffect(() => {
+    setActiveItem(getActiveItem());
+  }, [pathname, getActiveItem]);
 
   const handleItemClick = (label: string) => {
+    setIsMobileMenuOpen(false);
+
+    // Manejar BUSCAR
     if (label === 'BUSCAR') {
       setIsSearchModalOpen(true);
-    } else {
-      setActiveItem(label);
+      return;
     }
-    // Cerrar el menú mobile al seleccionar un item
-    setIsMobileMenuOpen(false);
+
+    // Manejar CUENTA
+    if (label === 'CUENTA') {
+      setIsCuentaModalOpen(true);
+      return;
+    }
+
+    // Manejar navegación
+    setActiveItem(label);
+
+    switch (label) {
+      case 'PELICULA':
+        router.push('/videos');
+        break;
+      case 'Sobre Nosotros':
+        router.push('/about');
+        break;
+      case 'SERIES':
+        // router.push('/series'); // Descomentar cuando tengas la ruta
+        break;
+      case 'NIÑOS':
+        // router.push('/ninos'); // Descomentar cuando tengas la ruta
+        break;
+      case 'ANIME':
+        // router.push('/anime'); // Descomentar cuando tengas la ruta
+        break;
+      case 'HISTORIAL':
+        // router.push('/historial'); // Descomentar cuando tengas la ruta
+        break;
+      default:
+        break;
+    }
   };
 
   const menuItems = [
@@ -35,6 +89,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onVideoSelect }) => {
   ];
 
   const bottomItems = [
+    { icon: <HandHeart className="w-5 h-5" />, label: 'Sobre Nosotros' },
     { icon: <History className="w-5 h-5" />, label: 'HISTORIAL' },
     { icon: <User className="w-5 h-5" />, label: 'CUENTA' },
   ];
@@ -68,7 +123,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onVideoSelect }) => {
           fixed left-0 top-0 h-screen bg-black border-r border-gray-800 z-50 transition-transform duration-300
           ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
           md:translate-x-0
-          w-[240px] md:w-[60px] lg:w-[120px]
+          w-[260px] md:w-[80px] lg:w-[160px]
         `}
       >
         <nav className="flex flex-col h-full py-4">
@@ -79,8 +134,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ onVideoSelect }) => {
               alt="Logo" 
               width={64}
               height={64}
-              className="w-12 h-12 md:w-10 md:h-10 lg:w-16 lg:h-16 object-contain"
+              className="w-12 h-12 md:w-10 md:h-10 lg:w-16 lg:h-16 object-contain cursor-pointer hover:opacity-80 transition-opacity"
               priority
+              onClick={() => {
+                router.push('/videos');
+                setActiveItem('PELICULA');
+              }}
             />
           </div>
           
@@ -114,6 +173,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onVideoSelect }) => {
         isOpen={isSearchModalOpen} 
         onClose={() => setIsSearchModalOpen(false)}
         onVideoSelect={onVideoSelect}
+      />
+      <ModalCuenta 
+        isOpen={isCuentaModalOpen}
+        onClose={() => setIsCuentaModalOpen(false)}
       />
     </>
   );

@@ -3,7 +3,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { MovieCard } from '../movie/MovieCard';
+import { MovieCard } from '@/components/ui/movie/MovieCard';
 
 interface Movie {
   id: string;
@@ -26,12 +26,14 @@ interface ContentSectionProps {
   title: string;
   movies: Movie[];
   onAddToList?: (id: string) => void;
+  isPreview?: boolean;
 }
 
 export const ContentSection: React.FC<ContentSectionProps> = ({ 
   title, 
   movies, 
-  onAddToList 
+  onAddToList,
+  isPreview = false 
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -116,9 +118,9 @@ export const ContentSection: React.FC<ContentSectionProps> = ({
   };
 
   return (
-    <section className="py-8 relative w-full">
-      <div className="flex items-center justify-between mb-6 px-4 sm:px-8 lg:px-16">
-        <h2 className="text-2xl font-semibold text-white">{title}</h2>
+    <section className="py-6 sm:py-8 relative w-full">
+      <div className="flex items-center justify-between mb-4 sm:mb-6 px-4 sm:px-8 lg:px-16">
+        <h2 className="text-xl sm:text-2xl font-semibold text-white">{title}</h2>
       </div>
       
       <div className="relative px-4 sm:px-8 lg:px-16 group">
@@ -139,7 +141,7 @@ export const ContentSection: React.FC<ContentSectionProps> = ({
         {/* Contenedor de scroll */}
         <div 
           ref={scrollRef} 
-          className="flex gap-4 overflow-x-scroll pb-4 scroll-smooth"
+          className="flex gap-2 sm:gap-3 lg:gap-4 overflow-x-scroll pb-4 scroll-smooth"
           style={{
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
@@ -160,6 +162,7 @@ export const ContentSection: React.FC<ContentSectionProps> = ({
                 year={movie.year}
                 onAddToList={handleAddToList}
                 isInList={favorites.includes(movie.id)}
+                isPreview={isPreview}
               />
             </div>
           ))}
