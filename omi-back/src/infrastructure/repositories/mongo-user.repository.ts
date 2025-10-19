@@ -7,8 +7,13 @@ interface IUserDocument {
   _id?: ObjectId;
   email: string;
   password: string;
+  firstName: string;
+  lastName: string;
+  age: number;
   createdAt: Date;
   updatedAt: Date;
+  resetPasswordToken?: string;
+  resetPasswordExpires?: Date;
 }
 
 export class MongoUserRepository implements IUserRepository {
@@ -58,8 +63,13 @@ export class MongoUserRepository implements IUserRepository {
       const userDoc: IUserDocument = {
         email: user.email.toLowerCase().trim(),
         password: user.password,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        age: user.age,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
+        resetPasswordToken: user.resetPasswordToken,
+        resetPasswordExpires: user.resetPasswordExpires,
       };
 
       const result = await collection.insertOne(userDoc);
@@ -72,6 +82,69 @@ export class MongoUserRepository implements IUserRepository {
       return this.mapDocumentToEntity(savedDoc as IUserDocument);
     } catch (error) {
       console.error('Error saving user:', error);
+      throw error;
+    }
+  }
+
+  async update(user: User): Promise<User> {
+    try {
+      const collection = this.getCollection();
+      
+      const updateDoc: Partial<IUserDocument> = {
+        email: user.email.toLowerCase().trim(),
+        password: user.password,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        age: user.age,
+        updatedAt: new Date(),
+        resetPasswordToken: user.resetPasswordToken,
+        resetPasswordExpires: user.resetPasswordExpires,
+      };
+
+      await collection.updateOne(
+        { _id: new ObjectId(user.id) },
+        { $set: updateDoc }
+      );
+
+      const updatedDoc = await collection.findOne({ _id: new ObjectId(user.id) });
+
+      if (!updatedDoc) {
+        throw new Error('User not found');
+      }
+
+      return this.mapDocumentToEntity(updatedDoc as IUserDocument);
+    } catch (error) {
+      console.error('Error updating user:', error);
+      throw error;
+    }
+  }
+
+  async delete(id: string): Promise<void> {
+    try {
+      const collection = this.getCollection();
+      const result = await collection.deleteOne({ _id: new ObjectId(id) });
+      
+      if (result.deletedCount === 0) {
+        throw new Error('User not found');
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      throw error;
+    }
+  }
+
+  async findByResetToken(token: string): Promise<User | null> {
+    try {
+      const collection = this.getCollection();
+      const userDoc = await collection.findOne({
+        resetPasswordToken: token,
+        resetPasswordExpires: { $gt: new Date() }
+      });
+      
+      if (!userDoc) return null;
+      return this.mapDocumentToEntity(userDoc as IUserDocument);
+    } catch (error) {
+      console.error('Error finding user by reset token:', error);
       throw error;
     }
   }
@@ -94,8 +167,13 @@ export class MongoUserRepository implements IUserRepository {
       doc._id?.toString() || '',
       doc.email,
       doc.password,
+      doc.firstName,
+      doc.lastName,
+      doc.age,
       doc.createdAt,
-      doc.updatedAt
+      doc.updatedAt,
+      doc.resetPasswordToken,
+      doc.resetPasswordExpires
     );
   }
 }

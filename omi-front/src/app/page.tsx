@@ -1,195 +1,172 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Sidebar } from '@/components/ui/sidebar/sidebar';
+import { Header as HeaderOriginal } from '@/components/ui/header/Header';
+const Header = HeaderOriginal as unknown as React.ComponentType<{ onOpenLogin: () => void }>;
+import { Button } from '@/components/ui/button';
+
 import { HeroBanner } from '@/components/ui/hero/HeroBanner';
-import { ContentSection } from '@/components/ui/content/ContentSection';
-import { VideoModal } from '@/components/ui/movie/VideoModal';
-import { useVideos, useFeaturedVideo } from '@/lib/hooks/useVideos';
+import { FeaturesSection } from '@/components/ui/features/FeaturesSection';
+import { InfiniteCarousel } from '@/components/ui/carousel/InfiniteCarousel';
+import { 
+  HeroBannerSkeleton 
+} from '@/components/ui/LoadingStates';
+import { useFeaturedVideo } from '@/lib/hooks/useVideos';
+import { videosAPI } from '@/lib/api/videos';
 import { Movie } from '@/lib/types';
 
-// Componente para los skeletons de carga - RESPONSIVE
-const LoadingSkeleton = () => (
-  <div className="px-4 sm:px-8 lg:px-16 py-8">
-    <div className="h-6 sm:h-8 w-32 sm:w-48 bg-gray-800 rounded mb-6 animate-pulse" />
-    <div className="flex gap-2 sm:gap-3 lg:gap-4 overflow-hidden">
-      {[...Array(6)].map((_, i) => (
-        <div 
-          key={i} 
-          className="w-[140px] sm:w-[170px] lg:w-[200px] h-[210px] sm:h-[255px] lg:h-[300px] bg-gray-800 rounded-lg animate-pulse flex-shrink-0" 
-        />
-      ))}
-    </div>
-  </div>
-);
+import { RegisterModal } from '@/components/ui/auth/RegisterModal';
+import { LoginModal } from '@/components/ui/auth/LoginModal';
 
-export default function Page() {
-  const [featuredModalOpen, setFeaturedModalOpen] = useState(false);
-  const [selectedVideo, setSelectedVideo] = useState<Movie | null>(null);
-  
-  // Consumir datos de tu backend
-  const { movies: popularVideos, loading: loadingPopular } = useVideos({
-    type: 'popular',
-    popularParams: { per_page: 15 }
-  });
+export default function LandingPage() {
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
-  const { movies: natureVideos, loading: loadingNature } = useVideos({
-    type: 'category',
-    query: 'nature',
-    searchParams: { per_page: 15, orientation: 'landscape' }
-  });
-
-  const { movies: cityVideos, loading: loadingCity } = useVideos({
-    type: 'category',
-    query: 'city',
-    searchParams: { per_page: 15 }
-  });
-
-  const { movies: technologyVideos, loading: loadingTechnology } = useVideos({
-    type: 'category',
-    query: 'technology',
-    searchParams: { per_page: 15 }
-  });
+  // Estados para el carrusel
+  const [exclusiveVideos, setExclusiveVideos] = useState<Movie[]>([]);
+  const [popularPage, setPopularPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingExclusive, setLoadingExclusive] = useState(true);
 
   const { featured, loading: loadingFeatured } = useFeaturedVideo();
 
-  // Handler para agregar a lista
-  const handleAddToList = (id: string) => {
-    console.log('Video added to list:', id);
+  // Cargar videos iniciales
+  React.useEffect(() => {
+    loadInitialVideos();
+  }, []);
+
+  const loadInitialVideos = async () => {
+    try {
+      setLoadingExclusive(true);
+      const movies = await videosAPI.getPopular({ 
+        page: 1, 
+        per_page: 15 
+      });
+      setExclusiveVideos(movies);
+    } catch (error) {
+      console.error('Error loading videos:', error);
+    } finally {
+      setLoadingExclusive(false);
+    }
+  };
+
+  // Cargar más videos
+  const loadMoreVideos = async () => {
+    const nextPage = popularPage + 1;
+    try {
+      const movies = await videosAPI.getPopular({ 
+        page: nextPage, 
+        per_page: 15 
+      });
+      
+      if (movies.length === 0) {
+        setHasMore(false);
+      } else {
+        setExclusiveVideos(prev => [...prev, ...movies]);
+        setPopularPage(nextPage);
+      }
+    } catch (error) {
+      console.error('Error loading more videos:', error);
+    }
+  };
+
+  const openLogin = () => {
+    setIsRegisterModalOpen(false);
+    setIsLoginModalOpen(true);
+  };
+
+  const openRegister = () => {
+    setIsLoginModalOpen(false);
+    setIsRegisterModalOpen(true);
   };
 
   const handleHeroPlay = () => {
-    setFeaturedModalOpen(true);
+    console.log('Hero play clicked - but is preview mode');
   };
-
-  // Handler para cuando se selecciona un video desde el SearchModal
-  const handleVideoSelect = (movie: Movie) => {
-    setSelectedVideo(movie);
-  };
-
-  // Verificar si hay videos disponibles
-  const hasVideos = popularVideos?.length > 0 || 
-                    natureVideos?.length > 0 || 
-                    cityVideos?.length > 0 || 
-                    technologyVideos?.length > 0;
-
-  const allLoaded = !loadingPopular && !loadingNature && !loadingCity && !loadingTechnology;
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-b from-black via-gray-900 to-black overflow-x-hidden">
-      <Sidebar onVideoSelect={handleVideoSelect} />
-      
-      {/* Main Content con márgenes responsive */}
-      <main className="
-        flex-1 overflow-x-hidden
-        ml-0 md:ml-[60px] lg:ml-[120px]
-        w-full md:w-[calc(100vw-60px)] lg:w-[calc(100vw-120px)]
-        transition-all duration-300
-      ">
-        <div className="w-full overflow-x-hidden">
-          {/* Hero Banner */}
+    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black overflow-x-hidden">
+      {/* Header */}
+      <Header onOpenLogin={() => setIsLoginModalOpen(true)} />
+
+      {/* Main Content */}
+      <main className="pt-20 overflow-x-hidden">
+        {/* Hero Banner */}
+        <section>
           {loadingFeatured ? (
-            <div className="
-              h-[300px] sm:h-[400px] lg:h-[500px] 
-              bg-gray-800 animate-pulse rounded-lg 
-              mx-4 sm:mx-8 lg:mx-16 
-              mt-16 md:mt-8
-            " />
+            <HeroBannerSkeleton />
           ) : featured ? (
             <HeroBanner
-              title={featured.title}
-              description={featured.description}
-              backdropUrl={featured.backdropUrl}
+              title="Una Experiencia Ilimitada"
+              description="Disfruta de estrenos exclusivos, clásicos y contenido original"
+              backdropUrl="https://res.cloudinary.com/dwlh82pza/image/upload/v1760488463/5_vxdplj.jpg"
               onPlay={handleHeroPlay}
+              isPreview={true}
+              badgeText=""
+              badgeColor="bg-cyan-600"
+              titleColor="text-cyan-400"
+              customButton={
+                <Button 
+                  size="default"
+                  className="
+                    bg-cyan-600 text-white hover:bg-cyan-700 font-semibold
+                    text-sm sm:text-base
+                    h-9 sm:h-10 lg:h-11
+                    px-4 sm:px-5 lg:px-6
+                  "
+                  onClick={() => setIsRegisterModalOpen(true)}
+                >
+                  Registrarse
+                </Button>
+              }
             />
           ) : null}
-          
-          <div className="space-y-8 sm:space-y-10 lg:space-y-12 pb-12 sm:pb-14 lg:pb-16 overflow-x-hidden">
-            {/* Videos Populares */}
-            {loadingPopular ? (
-              <LoadingSkeleton />
-            ) : popularVideos && popularVideos.length > 0 ? (
-              <ContentSection
-                title="Videos Populares"
-                movies={popularVideos}
-                onAddToList={handleAddToList}
-              />
-            ) : null}
+        </section>
 
-            {/* Naturaleza */}
-            {loadingNature ? (
-              <LoadingSkeleton />
-            ) : natureVideos && natureVideos.length > 0 ? (
-              <ContentSection
-                title="Naturaleza"
-                movies={natureVideos}
-                onAddToList={handleAddToList}
-              />
-            ) : null}
+        {/* Features Section */}
+        <FeaturesSection />
 
-            {/* Ciudad */}
-            {loadingCity ? (
-              <LoadingSkeleton />
-            ) : cityVideos && cityVideos.length > 0 ? (
-              <ContentSection
-                title="Ciudad"
-                movies={cityVideos}
-                onAddToList={handleAddToList}
-              />
-            ) : null}
-
-            {/* Tecnología */}
-            {loadingTechnology ? (
-              <LoadingSkeleton />
-            ) : technologyVideos && technologyVideos.length > 0 ? (
-              <ContentSection
-                title="Tecnología"
-                movies={technologyVideos}
-                onAddToList={handleAddToList}
-              />
-            ) : null}
-
-            {/* Mensaje cuando no hay videos */}
-            {allLoaded && !hasVideos && (
-              <div className="flex items-center justify-center h-96">
-                <div className="text-center px-4">
-                  <h2 className="text-xl sm:text-2xl font-bold text-white mb-4">
-                    No se pudieron cargar los videos
-                  </h2>
-                  <p className="text-sm sm:text-base text-gray-400">
-                    Por favor, verifica tu conexión e intenta nuevamente.
-                  </p>
-                </div>
+        {/* Estrenos Exclusivos - Carrusel Infinito */}
+        <section className="py-8 sm:py-12 lg:py-16">
+          {loadingExclusive ? (
+            <div className="px-4 md:px-12">
+              <div className="h-8 w-48 bg-gray-800 rounded animate-pulse mb-4"></div>
+              <div className="flex gap-4 overflow-hidden">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="flex-shrink-0 w-48 md:w-56">
+                    <div className="aspect-[2/3] bg-gray-800 rounded-lg animate-pulse"></div>
+                    <div className="h-4 bg-gray-800 rounded mt-2 animate-pulse"></div>
+                  </div>
+                ))}
               </div>
-            )}
-          </div>
-        </div>
+            </div>
+          ) : exclusiveVideos && exclusiveVideos.length > 0 ? (
+            <InfiniteCarousel
+              title="Estrenos Exclusivos"
+              movies={exclusiveVideos}
+              onLoadMore={loadMoreVideos}
+              hasMore={hasMore}
+              scrollSpeed={0.5}
+              isPreview={true}
+            />
+          ) : null}
+        </section>
+
+        {/* Footer Spacing */}
+        <div className="pb-12 sm:pb-16 lg:pb-20" />
       </main>
 
-      {/* Modal para el video destacado */}
-      {featured && featuredModalOpen && (
-        <VideoModal
-          isOpen={featuredModalOpen}
-          onClose={() => setFeaturedModalOpen(false)}
-          video={{
-            id: 'featured',
-            title: featured.title,
-            videoUrl: featured.videoUrl || '',
-            posterUrl: featured.backdropUrl,
-          }}
-          onAddToList={handleAddToList}
-        />
-      )}
-
-      {/* Modal para videos seleccionados desde búsqueda */}
-      {selectedVideo && (
-        <VideoModal
-          isOpen={!!selectedVideo}
-          onClose={() => setSelectedVideo(null)}
-          video={selectedVideo}
-          onAddToList={handleAddToList}
-        />
-      )}
+      {/* Modals */}
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        onOpenRegister={openRegister}
+      />
+      <RegisterModal
+        isOpen={isRegisterModalOpen}
+        onClose={() => setIsRegisterModalOpen(false)}
+        onOpenLogin={openLogin}
+      />
     </div>
   );
 }

@@ -11,6 +11,9 @@ export interface AuthResponse {
   user: {
     id: string;
     email: string;
+    firstName: string;
+    lastName: string;
+    age: number;
     createdAt: Date;
     updatedAt: Date;
   };
@@ -25,6 +28,27 @@ export interface LoginRequest {
 export interface RegisterRequest {
   email: string;
   password: string;
+  firstName: string;
+  lastName: string;
+  age: number;
+}
+
+export interface UpdateProfileRequest {
+  firstName?: string;
+  lastName?: string;
+  age?: number;
+  email?: string;
+  currentPassword?: string;
+  newPassword?: string;
+}
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
 }
 
 export interface UserPayload {

@@ -21,7 +21,8 @@ export class LoginUseCase {
     // Generate JWT token
     const token = jwt.sign(
       { userId: user.id, email: user.email },
-      config.jwt.secret
+      String(config.jwt.secret),
+      { expiresIn: '24h' }
     );
 
     return {

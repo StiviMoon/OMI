@@ -1,3 +1,6 @@
+// Re-exportar tipos de autenticación
+export type { User } from './types/auth.types';
+
 export interface Movie {
   id: string;
   title: string;
