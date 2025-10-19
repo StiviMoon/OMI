@@ -207,20 +207,32 @@ npm start      # Producción
 
 ## ⚙️ Configuración
 
-### Backend (.env)
+### URLs de Deployment
+
+```
+🚀 Backend:  https://omi-g653.onrender.com
+🎨 Frontend: https://omi-front.vercel.app
+```
+
+### Variables de Entorno
+
+**Backend:** Copia `.env.example` a `.env` y completa:
 ```env
 NODE_ENV=development
 MONGODB_URI=mongodb+srv://...
 JWT_SECRET=your-secret
 RESEND_API_KEY=re_xxx
 PEXELS_API_KEY=xxx
+CORS_ORIGIN=http://localhost:3000
 DEV_EMAIL=johan.steven.rodriguez@correounivalle.edu.co
 ```
 
-### Frontend (.env.local)
+**Frontend:** Crea `.env.local`:
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:3001
 ```
+
+**Ver guía completa:** [`ENV_GUIDE.md`](./ENV_GUIDE.md)
 
 ---
 

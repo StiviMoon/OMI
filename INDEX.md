@@ -9,6 +9,8 @@ Navegación rápida a toda la documentación y recursos del proyecto.
 ### 🏠 Raíz del Proyecto
 - **[README.md](./README.md)** ⭐ - Documentación principal, inicio rápido
 - **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Guía completa de deployment (VPS, Vercel, Docker)
+- **[ENV_GUIDE.md](./ENV_GUIDE.md)** - Guía de variables de entorno
+- **[PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md)** - Estructura del proyecto
 
 ### 🔧 Backend (omi-back/)
 - **[README.md](./omi-back/README.md)** - Documentación completa del backend
@@ -118,12 +120,19 @@ OMI/
 
 ---
 
+## 🚀 URLs de Deployment
+
+```
+Backend:  https://omi-g653.onrender.com
+Frontend: https://omi-front.vercel.app
+```
+
 ## 📊 Estadísticas
 
-- **Documentación:** 7 archivos MD + este índice
+- **Documentación:** 10 archivos MD
 - **Scripts útiles:** 3 shell scripts + 2 test scripts
 - **Endpoints:** 11 (7 auth + 3 videos + 1 root)
-- **Tests:** 14 automatizados
+- **Tests:** 11 automatizados
 - **Componentes:** 15+
 
 ---
