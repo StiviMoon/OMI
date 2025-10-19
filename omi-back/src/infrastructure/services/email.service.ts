@@ -23,16 +23,22 @@ export class EmailService implements IEmailService {
   ): Promise<void> {
     const resetUrl = `${config.email.resetPasswordUrl}?token=${resetToken}`;
     const isDevelopment = config.nodeEnv === 'development';
-
-    // En desarrollo, enviamos TODO a tu email verificado de Resend
-    const emailTo = isDevelopment ? config.email.devEmail : email;
-    const emailSubject = isDevelopment 
-      ? `[DEV] Recuperar Contraseña - Usuario: ${email}`
+    
+    // Detectar si estamos usando el email de onboarding de Resend
+    const isUsingResendOnboarding = config.email.fromEmail === 'onboarding@resend.dev';
+    
+    // Si usamos onboarding@resend.dev, SIEMPRE enviamos al DEV_EMAIL (producción o desarrollo)
+    // porque Resend solo permite enviar a emails verificados sin dominio propio
+    const emailTo = isUsingResendOnboarding ? config.email.devEmail : email;
+    
+    const emailSubject = isUsingResendOnboarding 
+      ? `${isDevelopment ? '[DEV]' : '[PROD]'} Recuperar Contraseña - Usuario: ${email}`
       : 'Recuperación de Contraseña - OMI';
 
-    // En desarrollo, mostramos el token en los logs
-    if (isDevelopment) {
-      console.log('\n🔐 PASSWORD RESET REQUEST (Development Mode)');
+    // Log para debugging (en desarrollo Y en producción si usamos onboarding)
+    if (isDevelopment || isUsingResendOnboarding) {
+      const mode = isDevelopment ? 'Development' : 'Production (Resend Onboarding)';
+      console.log(`\n🔐 PASSWORD RESET REQUEST (${mode})`);
       console.log('─'.repeat(60));
       console.log(`📧 Usuario original: ${email}`);
       console.log(`📨 Email enviado a: ${emailTo} (tu correo verificado)`);
@@ -138,16 +144,16 @@ export class EmailService implements IEmailService {
                 <h1>🔐 Recuperación de Contraseña</h1>
               </div>
               <div class="content">
-                ${isDevelopment ? `
+                ${isUsingResendOnboarding ? `
                 <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 16px; margin-bottom: 24px; border-radius: 8px;">
                   <p style="margin: 0; font-size: 14px; color: #856404;">
-                    <strong>🔧 MODO DESARROLLO</strong><br>
+                    <strong>${isDevelopment ? '🔧 MODO DESARROLLO' : '⚙️ MODO PRODUCCIÓN (RESEND ONBOARDING)'}</strong><br>
                     <small>Solicitud para el usuario: <strong>${email}</strong></small>
                   </p>
                 </div>
                 ` : ''}
                 <p>Hola <strong>${firstName}</strong>,</p>
-                <p>Hemos recibido una solicitud para restablecer la contraseña de ${isDevelopment ? `la cuenta <strong>${email}</strong>` : 'tu cuenta'} en OMI.</p>
+                <p>Hemos recibido una solicitud para restablecer la contraseña de ${isUsingResendOnboarding ? `la cuenta <strong>${email}</strong>` : 'tu cuenta'} en OMI.</p>
                 <p>Para crear una nueva contraseña, haz clic en el siguiente botón:</p>
                 <div class="button-container">
                   <a href="${resetUrl}" class="button">Restablecer Contraseña</a>
@@ -174,9 +180,9 @@ export class EmailService implements IEmailService {
           </html>
         `,
         text: `
-${isDevelopment ? `═══ MODO DESARROLLO ═══\nSolicitud para el usuario: ${email}\n\n` : ''}Hola ${firstName},
+${isUsingResendOnboarding ? `═══ ${isDevelopment ? 'MODO DESARROLLO' : 'MODO PRODUCCIÓN (RESEND ONBOARDING)'} ═══\nSolicitud para el usuario: ${email}\n\n` : ''}Hola ${firstName},
 
-Hemos recibido una solicitud para restablecer la contraseña de ${isDevelopment ? `la cuenta ${email}` : 'tu cuenta'} en OMI.
+Hemos recibido una solicitud para restablecer la contraseña de ${isUsingResendOnboarding ? `la cuenta ${email}` : 'tu cuenta'} en OMI.
 
 Para restablecer tu contraseña, visita el siguiente enlace:
 ${resetUrl}
@@ -191,21 +197,14 @@ El equipo de OMI
       });
 
       if (error) {
-        console.error('⚠️  Error sending email (Resend):', error.message);
-        // En desarrollo, no fallar si el email no se puede enviar
-        if (config.nodeEnv !== 'development') {
-          throw new Error('Failed to send password reset email');
-        }
-        return;
-      }
-
-      console.log(`✅ Password reset email sent to: ${email}`);
-    } catch (error) {
-      console.error('⚠️  Error sending email:', error);
-      // En desarrollo, no fallar - el token ya está guardado en la DB
-      if (config.nodeEnv !== 'development') {
+        console.error('⚠️  Error sending email (Resend):', error);
         throw new Error('Failed to send password reset email');
       }
+
+      console.log(`✅ Password reset email sent to: ${emailTo}${emailTo !== email ? ` (original: ${email})` : ''}`);
+    } catch (error) {
+      console.error('⚠️  Error sending email (exception):', error);
+      throw new Error('Failed to send password reset email');
     }
   }
 }
