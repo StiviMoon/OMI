@@ -7,15 +7,11 @@
     "build": "tsc",
     "build:watch": "tsc --watch",
     "clean": "rm -rf dist",
-    "clean:all": "./clean-and-restart.sh",
     "build:prod": "npm run clean && npm run build",
     "start": "node dist/index.js",
     "start:prod": "npm run build:prod && npm run start",
-    "test": "npm run test:complete",
-    "test:flow": "ts-node test-user-flow.ts",
-    "test:flow:bash": "./test-user-flow.sh",
-    "test:complete": "ts-node test-complete-api.ts",
-    "test:complete:bash": "./test-complete-api.sh"
+    "test": "ts-node test-complete-api.ts",
+    "test:flow": "ts-node test-user-flow.ts"
   },
   "keywords": [
     "authentication",
