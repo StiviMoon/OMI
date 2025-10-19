@@ -7,10 +7,15 @@
     "build": "tsc",
     "build:watch": "tsc --watch",
     "clean": "rm -rf dist",
+    "clean:all": "./clean-and-restart.sh",
     "build:prod": "npm run clean && npm run build",
     "start": "node dist/index.js",
     "start:prod": "npm run build:prod && npm run start",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npm run test:complete",
+    "test:flow": "ts-node test-user-flow.ts",
+    "test:flow:bash": "./test-user-flow.sh",
+    "test:complete": "ts-node test-complete-api.ts",
+    "test:complete:bash": "./test-complete-api.sh"
   },
   "keywords": [
     "authentication",
@@ -28,13 +33,14 @@
     "dotenv": "^16.3.1",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "mongodb": "^5.9.2"
+    "mongodb": "^5.9.2",
+    "resend": "^6.2.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.3",
-    "@types/jsonwebtoken": "^9.0.5",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.6.2",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",

@@ -20,4 +20,10 @@ export const config = {
     apiKey: process.env['PEXELS_API_KEY'] || '',
     baseUrl: 'https://api.pexels.com/v1',
   },
-} as const;
+  email: {
+    apiKey: process.env['RESEND_API_KEY'] || '',
+    fromEmail: process.env['EMAIL_FROM'] || 'onboarding@resend.dev',
+    fromName: process.env['EMAIL_FROM_NAME'] || 'OMI',
+    resetPasswordUrl: process.env['RESET_PASSWORD_URL'] || 'http://localhost:3000/reset-password',
+  },
+};

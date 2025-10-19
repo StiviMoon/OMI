@@ -6,7 +6,18 @@ import { config } from '../../config';
 export class RegisterUseCase {
   constructor(private userRepository: IUserRepository) {}
 
-  async execute(email: string, password: string) {
+  async execute(
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+    age: number
+  ) {
+    // Validate age
+    if (age < 13 || age > 120) {
+      throw new Error('Age must be between 13 and 120');
+    }
+
     // Check if user already exists
     const existingUser = await this.userRepository.existsByEmail(email);
     if (existingUser) {
@@ -14,13 +25,14 @@ export class RegisterUseCase {
     }
 
     // Create new user
-    const user = await User.create(email, password);
+    const user = await User.create(email, password, firstName, lastName, age);
     const savedUser = await this.userRepository.save(user);
 
     // Generate JWT token
     const token = jwt.sign(
       { userId: savedUser.id, email: savedUser.email },
-      config.jwt.secret
+      String(config.jwt.secret),
+      { expiresIn: '24h' }
     );
 
     return {

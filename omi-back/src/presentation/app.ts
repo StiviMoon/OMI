@@ -8,8 +8,13 @@ import { AuthController } from './controllers/auth.controller';
 import { PexelsController } from './controllers/pexels.controller';
 import { RegisterUseCase } from '../domain/use-cases/register.use-case';
 import { LoginUseCase } from '../domain/use-cases/login.use-case';
+import { UpdateProfileUseCase } from '../domain/use-cases/update-profile.use-case';
+import { DeleteAccountUseCase } from '../domain/use-cases/delete-account.use-case';
+import { ForgotPasswordUseCase } from '../domain/use-cases/forgot-password.use-case';
+import { ResetPasswordUseCase } from '../domain/use-cases/reset-password.use-case';
 import { MongoUserRepository } from '../infrastructure/repositories/mongo-user.repository';
 import { PexelsService } from '../infrastructure/services/pexels.service';
+import { EmailService } from '../infrastructure/services/email.service';
 
 export class App {
   private app: express.Application;
@@ -25,11 +30,30 @@ export class App {
   }
 
   private setupDependencies(): void {
+    // Initialize repositories and services
     const userRepository = new MongoUserRepository();
+    const emailService = new EmailService();
+
+    // Initialize use cases
     const registerUseCase = new RegisterUseCase(userRepository);
     const loginUseCase = new LoginUseCase(userRepository);
-    this.authController = new AuthController(registerUseCase, loginUseCase);
+    const updateProfileUseCase = new UpdateProfileUseCase(userRepository);
+    const deleteAccountUseCase = new DeleteAccountUseCase(userRepository);
+    const forgotPasswordUseCase = new ForgotPasswordUseCase(userRepository, emailService);
+    const resetPasswordUseCase = new ResetPasswordUseCase(userRepository);
 
+    // Initialize auth controller
+    this.authController = new AuthController(
+      registerUseCase,
+      loginUseCase,
+      updateProfileUseCase,
+      deleteAccountUseCase,
+      forgotPasswordUseCase,
+      resetPasswordUseCase,
+      userRepository
+    );
+
+    // Initialize pexels controller
     const pexelsService = new PexelsService();
     this.pexelsController = new PexelsController(pexelsService);
   }

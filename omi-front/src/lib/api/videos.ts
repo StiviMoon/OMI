@@ -1,9 +1,13 @@
 import { Movie, SearchParams, PopularParams } from '../types';
 
 // URL base de tu backend
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL 
-  ? `${process.env.NEXT_PUBLIC_API_URL}/api/videos`
-  : 'http://localhost:3001/api/videos';
+// Use the environment variable or fallback to localhost
+const getAPIBaseURL = () => {
+  const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  return `${baseURL}/api/videos`;
+};
+
+const API_BASE_URL = getAPIBaseURL();
 
 // Tipos de respuesta de tu backend (basados en Pexels)
 interface VideoFile {
@@ -67,6 +71,7 @@ async function fetchAPI<T>(endpoint: string, params?: Record<string, string | nu
   const url = `${API_BASE_URL}${endpoint}${queryString}`;
 
   console.log('🔍 Fetching URL:', url);
+  console.log('🌐 API_BASE_URL:', API_BASE_URL);
 
   try {
     const response = await fetch(url, {
@@ -75,6 +80,7 @@ async function fetchAPI<T>(endpoint: string, params?: Record<string, string | nu
         'Content-Type': 'application/json',
       },
       cache: 'no-store',
+      mode: 'cors', // Explicitly set CORS mode
     });
 
     // Obtener el texto de la respuesta primero
@@ -109,7 +115,20 @@ async function fetchAPI<T>(endpoint: string, params?: Record<string, string | nu
 
     return jsonData;
   } catch (error) {
-    console.error('❌ Fetch Error:', error);
+    console.error('❌ Fetch Error Details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      url,
+      error
+    });
+    
+    // If it's a network error, provide more helpful information
+    if (error instanceof TypeError && error.message === 'Failed to fetch') {
+      throw new Error(
+        `No se puede conectar al servidor backend en ${API_BASE_URL}. ` +
+        `Asegúrate de que el servidor backend esté corriendo en el puerto correcto.`
+      );
+    }
+    
     throw error;
   }
 }
