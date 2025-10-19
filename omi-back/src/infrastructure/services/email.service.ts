@@ -22,13 +22,21 @@ export class EmailService implements IEmailService {
     firstName: string
   ): Promise<void> {
     const resetUrl = `${config.email.resetPasswordUrl}?token=${resetToken}`;
+    const isDevelopment = config.nodeEnv === 'development';
+
+    // En desarrollo, enviamos TODO a tu email verificado de Resend
+    const emailTo = isDevelopment ? config.email.devEmail : email;
+    const emailSubject = isDevelopment 
+      ? `[DEV] Recuperar Contraseña - Usuario: ${email}`
+      : 'Recuperación de Contraseña - OMI';
 
     // En desarrollo, mostramos el token en los logs
-    if (config.nodeEnv === 'development') {
-      console.log('\n🔐 PASSWORD RESET TOKEN (Development Mode)');
+    if (isDevelopment) {
+      console.log('\n🔐 PASSWORD RESET REQUEST (Development Mode)');
       console.log('─'.repeat(60));
-      console.log(`📧 Email: ${email}`);
-      console.log(`👤 Name: ${firstName}`);
+      console.log(`📧 Usuario original: ${email}`);
+      console.log(`📨 Email enviado a: ${emailTo} (tu correo verificado)`);
+      console.log(`👤 Nombre: ${firstName}`);
       console.log(`🔑 Token: ${resetToken}`);
       console.log(`🔗 URL: ${resetUrl}`);
       console.log('─'.repeat(60) + '\n');
@@ -37,8 +45,8 @@ export class EmailService implements IEmailService {
     try {
       const { data, error } = await this.resend.emails.send({
         from: `${config.email.fromName} <${config.email.fromEmail}>`,
-        to: [email],
-        subject: 'Recuperación de Contraseña - OMI',
+        to: [emailTo],
+        subject: emailSubject,
         html: `
           <!DOCTYPE html>
           <html lang="es">
@@ -130,8 +138,16 @@ export class EmailService implements IEmailService {
                 <h1>🔐 Recuperación de Contraseña</h1>
               </div>
               <div class="content">
+                ${isDevelopment ? `
+                <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 16px; margin-bottom: 24px; border-radius: 8px;">
+                  <p style="margin: 0; font-size: 14px; color: #856404;">
+                    <strong>🔧 MODO DESARROLLO</strong><br>
+                    <small>Solicitud para el usuario: <strong>${email}</strong></small>
+                  </p>
+                </div>
+                ` : ''}
                 <p>Hola <strong>${firstName}</strong>,</p>
-                <p>Hemos recibido una solicitud para restablecer la contraseña de tu cuenta en OMI.</p>
+                <p>Hemos recibido una solicitud para restablecer la contraseña de ${isDevelopment ? `la cuenta <strong>${email}</strong>` : 'tu cuenta'} en OMI.</p>
                 <p>Para crear una nueva contraseña, haz clic en el siguiente botón:</p>
                 <div class="button-container">
                   <a href="${resetUrl}" class="button">Restablecer Contraseña</a>
@@ -158,9 +174,9 @@ export class EmailService implements IEmailService {
           </html>
         `,
         text: `
-Hola ${firstName},
+${isDevelopment ? `═══ MODO DESARROLLO ═══\nSolicitud para el usuario: ${email}\n\n` : ''}Hola ${firstName},
 
-Hemos recibido una solicitud para restablecer la contraseña de tu cuenta en OMI.
+Hemos recibido una solicitud para restablecer la contraseña de ${isDevelopment ? `la cuenta ${email}` : 'tu cuenta'} en OMI.
 
 Para restablecer tu contraseña, visita el siguiente enlace:
 ${resetUrl}

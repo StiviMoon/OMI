@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { X, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { authApi } from '@/lib/api/auth';
 
 interface RegisterModalProps {
   isOpen: boolean;
@@ -16,7 +17,9 @@ interface RegisterModalProps {
 export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onOpenLogin }) => {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
+    age: '',
     email: '',
     password: '',
     confirmPassword: ''
@@ -47,7 +50,9 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
   useEffect(() => {
     if (!isOpen) {
       setFormData({
-        name: '',
+        firstName: '',
+        lastName: '',
+        age: '',
         email: '',
         password: '',
         confirmPassword: ''
@@ -74,68 +79,46 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
       return;
     }
 
+    // Validar edad
+    const age = parseInt(formData.age);
+    if (isNaN(age) || age < 13 || age > 120) {
+      setError('La edad debe estar entre 13 y 120 años');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      // URL de tu backend Express
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-      const response = await fetch(`${API_URL}/api/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          password: formData.password
-        }),
+      const response = await authApi.register({
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        age: age,
       });
 
-      // Verificar si la respuesta es JSON
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('El servidor no está respondiendo correctamente. Verifica que la ruta API exista.');
-      }
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        // Tu backend usa "error" en lugar de "message"
-        const errorMessage = data.error || data.message || 'Error al registrarse';
-        
-        // Mensajes más amigables
-        if (errorMessage.includes('already exists') || errorMessage.includes('ya existe')) {
-          throw new Error('Este correo electrónico ya está registrado');
-        }
-        if (errorMessage.includes('invalid email')) {
-          throw new Error('El correo electrónico no es válido');
-        }
-        
-        throw new Error(errorMessage);
-      }
-
-      // Registro exitoso
-      console.log('Registro exitoso:', data);
-      
-      // Si el backend devuelve un token automáticamente
-      if (data.token) {
-        localStorage.setItem('token', data.token);
-      }
+      // Registro exitoso - guardar token
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
       
       // Cerrar el modal
       onClose();
       
-      // Opción 1: Redirigir al dashboard si ya está autenticado
-      if (data.token) {
-        router.push('/dashboard');
-      } 
-      // Opción 2: Abrir el modal de login para que inicie sesión
-      else {
-        setTimeout(() => {
-          onOpenLogin?.();
-        }, 300);
-      }
+      // Redirigir a videos
+      router.push('/videos');
       
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al registrarse');
+      const errorMessage = err instanceof Error ? err.message : 'Error al registrarse';
+      
+      // Mensajes más amigables
+      if (errorMessage.includes('already exists')) {
+        setError('Este correo electrónico ya está registrado');
+      } else if (errorMessage.includes('Age must be between')) {
+        setError('La edad debe estar entre 13 y 120 años');
+      } else {
+        setError(errorMessage);
+      }
+      
       console.error('Error en registro:', err);
     } finally {
       setIsLoading(false);
@@ -218,22 +201,61 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
                 </div>
               )}
 
-              {/* Name Input */}
+              {/* First Name Input */}
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-1.5">
-                  Nombre completo
+                <label htmlFor="firstName" className="block text-sm font-medium text-gray-300 mb-1.5">
+                  Nombre
                 </label>
                 <input
-                  id="name"
-                  name="name"
+                  id="firstName"
+                  name="firstName"
                   type="text"
-                  value={formData.name}
+                  value={formData.firstName}
                   onChange={handleChange}
                   className="w-full px-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                  placeholder="Juan Pérez"
+                  placeholder="Juan"
                   required
                   disabled={isLoading}
                 />
+              </div>
+
+              {/* Last Name Input */}
+              <div>
+                <label htmlFor="lastName" className="block text-sm font-medium text-gray-300 mb-1.5">
+                  Apellido
+                </label>
+                <input
+                  id="lastName"
+                  name="lastName"
+                  type="text"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                  placeholder="Pérez"
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+
+              {/* Age Input */}
+              <div>
+                <label htmlFor="age" className="block text-sm font-medium text-gray-300 mb-1.5">
+                  Edad
+                </label>
+                <input
+                  id="age"
+                  name="age"
+                  type="number"
+                  value={formData.age}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                  placeholder="25"
+                  required
+                  min="13"
+                  max="120"
+                  disabled={isLoading}
+                />
+                <p className="text-xs text-gray-500 mt-1">Debes tener al menos 13 años</p>
               </div>
 
               {/* Email Input */}

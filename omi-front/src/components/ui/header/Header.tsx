@@ -4,14 +4,16 @@ import React, { useState } from 'react';
 import { Menu, X, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LoginModal } from '@/components/ui/auth/LoginModal';
-import { RegisterModal } from '@/components/ui/auth/RegisterModal'; 
+import { RegisterModal } from '@/components/ui/auth/RegisterModal';
+import { ForgotPasswordModal } from '@/components/ui/auth/ForgotPasswordModal';
 import Image from 'next/image';
 
 export const Header: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false); 
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const [isForgotPasswordModalOpen, setIsForgotPasswordModalOpen] = useState(false); 
 
   return (
     <header className="
@@ -124,11 +126,18 @@ export const Header: React.FC = () => {
       <LoginModal 
         isOpen={isLoginModalOpen} 
         onClose={() => setIsLoginModalOpen(false)}
-        onOpenRegister={() => setIsRegisterModalOpen(true)} 
+        onOpenRegister={() => setIsRegisterModalOpen(true)}
+        onOpenForgotPassword={() => setIsForgotPasswordModalOpen(true)}
       />
       <RegisterModal 
         isOpen={isRegisterModalOpen} 
-        onClose={() => setIsRegisterModalOpen(false)} 
+        onClose={() => setIsRegisterModalOpen(false)}
+        onOpenLogin={() => setIsLoginModalOpen(true)}
+      />
+      <ForgotPasswordModal
+        isOpen={isForgotPasswordModalOpen}
+        onClose={() => setIsForgotPasswordModalOpen(false)}
+        onBack={() => setIsLoginModalOpen(true)}
       />
     </header>
   );

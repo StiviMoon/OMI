@@ -5,14 +5,21 @@ import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { X, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { authApi } from '@/lib/api/auth';
 
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenRegister?: () => void;
+  onOpenForgotPassword?: () => void;
 }
 
-export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onOpenRegister }) => {
+export const LoginModal: React.FC<LoginModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  onOpenRegister,
+  onOpenForgotPassword 
+}) => {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -55,40 +62,31 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onOpenR
     setIsLoading(true);
 
     try {
-      // URL de tu backend Express
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-      const response = await fetch(`${API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+      const response = await authApi.login({
+        email,
+        password,
       });
 
-      // Verificar si la respuesta es JSON
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('El servidor no está respondiendo correctamente. Verifica que la ruta API exista.');
-      }
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || data.message || 'Error al iniciar sesión');
-      }
-
-      // Login exitoso
-      console.log('Login exitoso:', data);
-      
-      // Guardar el token
-      localStorage.setItem('token', data.token);
+      // Login exitoso - guardar token y usuario
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
       
       // Cerrar el modal
       onClose();
       
-      // Redirigir al dashboard o página deseada
+      // Redirigir a videos
       router.push('/videos');
       
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al iniciar sesión');
+      const errorMessage = err instanceof Error ? err.message : 'Error al iniciar sesión';
+      
+      // Mensajes más amigables
+      if (errorMessage.includes('Invalid credentials') || errorMessage.includes('not found')) {
+        setError('Correo o contraseña incorrectos');
+      } else {
+        setError(errorMessage);
+      }
+      
       console.error('Error en login:', err);
     } finally {
       setIsLoading(false);
@@ -98,6 +96,11 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onOpenR
   const handleRegisterClick = () => {
     onClose(); 
     onOpenRegister?.(); 
+  };
+
+  const handleForgotPasswordClick = () => {
+    onClose();
+    onOpenForgotPassword?.();
   };
 
   const modalContent = (
@@ -207,6 +210,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onOpenR
               <div className="text-right">
                 <button
                   type="button"
+                  onClick={handleForgotPasswordClick}
                   className="text-sm text-gray-400 hover:text-cyan-400 transition-colors disabled:opacity-50"
                   disabled={isLoading}
                 >

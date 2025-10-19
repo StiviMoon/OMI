@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { User, ChevronDown, X, Lock, Trash2, Eye, EyeOff } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { User as UserIcon, ChevronDown, X, Lock, Trash2, Eye, EyeOff } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { authApi } from '@/lib/api/auth';
 
 interface ModalCuentaProps {
   isOpen: boolean;
@@ -9,10 +10,21 @@ interface ModalCuentaProps {
 }
 
 interface UserData {
-  nombre: string;
-  apellido: string;
-  edad: string | number;
-  correo: string;
+  firstName: string;
+  lastName: string;
+  age: number;
+  email: string;
+}
+
+interface PasswordData {
+  current: string;
+  new: string;
+  confirm: string;
+}
+
+interface DeleteData {
+  confirmText: string;
+  password: string;
 }
 
 type Section = 'informacion' | 'editar' | 'seguridad' | 'eliminar';
@@ -20,24 +32,30 @@ type Section = 'informacion' | 'editar' | 'seguridad' | 'eliminar';
 export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  // Estado para controlar la sección activa
   const [activeSection, setActiveSection] = useState<Section>('informacion');
-  
-  // DATOS ESTÁTICOS TEMPORALES
   const [userData, setUserData] = useState<UserData>({
-    nombre: 'Juan',
-    apellido: 'Pérez',
-    edad: 25,
-    correo: 'juan.perez@example.com'
+    firstName: '',
+    lastName: '',
+    age: 0,
+    email: ''
   });
-  
-  // Estados para edición
   const [editData, setEditData] = useState<UserData>(userData);
-  
-  // Estados para mostrar/ocultar contraseñas
+  const [passwordData, setPasswordData] = useState<PasswordData>({
+    current: '',
+    new: '',
+    confirm: ''
+  });
+  const [deleteData, setDeleteData] = useState<DeleteData>({
+    confirmText: '',
+    password: ''
+  });
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showDeletePassword, setShowDeletePassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   // WCAG 2.1.1 - Cerrar con Escape
   useEffect(() => {
@@ -96,35 +114,135 @@ export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
     return () => document.removeEventListener('keydown', handleTabKey);
   }, [isOpen]);
 
-  // Resetear a información al abrir el modal
+  const handleLogout = () => {
+    authApi.logout();
+    localStorage.removeItem('user');
+    onClose();
+    router.push('/');
+  };
+
+  const loadUserProfile = useCallback(async () => {
+    try {
+      const response = await authApi.getProfile();
+      const user = response.data.user;
+      
+      const userData: UserData = {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        age: user.age,
+        email: user.email,
+      };
+      
+      setUserData(userData);
+      setEditData(userData);
+    } catch (err) {
+      console.error('Error loading profile:', err);
+      // Si falla, probablemente el token expiró
+      handleLogout();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Cargar datos del usuario al abrir
   useEffect(() => {
     if (isOpen) {
       setActiveSection('informacion');
-      setEditData(userData);
+      loadUserProfile();
     }
-  }, [isOpen, userData]);
+  }, [isOpen, loadUserProfile]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    onClose();
-    router.push('/');
-    
+  const handleSaveProfile = async () => {
+    setError('');
+    setSuccess('');
+    setIsLoading(true);
+
+    try {
+      await authApi.updateProfile({
+        firstName: editData.firstName,
+        lastName: editData.lastName,
+        age: editData.age,
+        email: editData.email,
+      });
+
+      setUserData(editData);
+      setSuccess('Perfil actualizado exitosamente');
+      
+      setTimeout(() => {
+        setActiveSection('informacion');
+        setSuccess('');
+      }, 2000);
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al actualizar perfil');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleSaveProfile = () => {
-    setUserData(editData);
-    setActiveSection('informacion');
-    console.log('Perfil guardado:', editData);
+  const handleChangePassword = async () => {
+    setError('');
+    setSuccess('');
+
+    if (passwordData.new !== passwordData.confirm) {
+      setError('Las contraseñas no coinciden');
+      return;
+    }
+
+    if (passwordData.new.length < 6) {
+      setError('La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      await authApi.updateProfile({
+        currentPassword: passwordData.current,
+        newPassword: passwordData.new,
+      });
+
+      setSuccess('Contraseña actualizada exitosamente');
+      setPasswordData({ current: '', new: '', confirm: '' });
+      
+      setTimeout(() => {
+        setSuccess('');
+        setActiveSection('informacion');
+      }, 2000);
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al cambiar contraseña');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleChangePassword = () => {
-    console.log('Cambiar contraseña');
-  };
+  const handleDeleteAccount = async () => {
+    setError('');
 
-  const handleDeleteAccount = () => {
-    if (window.confirm('¿Estás seguro de que deseas eliminar tu cuenta? Esta acción no se puede deshacer.')) {
-      console.log('Cuenta eliminada');
+    if (deleteData.confirmText !== 'ELIMINAR') {
+      setError('Debes escribir "ELIMINAR" para confirmar');
+      return;
+    }
+
+    if (!deleteData.password) {
+      setError('Debes ingresar tu contraseña');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      await authApi.deleteAccount({
+        password: deleteData.password,
+      });
+
+      // Cerrar sesión y redirigir
       handleLogout();
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al eliminar cuenta');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -136,6 +254,18 @@ export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
       case 'informacion':
         return (
           <div className="space-y-3 sm:space-y-4 md:space-y-5">
+            {error && (
+              <div className="bg-red-500/10 border border-red-500 text-red-500 px-4 py-3 rounded-md text-sm">
+                {error}
+              </div>
+            )}
+            
+            {success && (
+              <div className="bg-green-500/10 border border-green-500 text-green-500 px-4 py-3 rounded-md text-sm">
+                {success}
+              </div>
+            )}
+            
             <div>
               <label 
                 htmlFor="nombre-usuario"
@@ -147,7 +277,7 @@ export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
                 id="nombre-usuario"
                 className="border-b border-white/30 pb-2 text-white text-sm sm:text-base"
               >
-                {userData.nombre}
+                {userData.firstName}
               </div>
             </div>
             
@@ -162,7 +292,7 @@ export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
                 id="apellido-usuario"
                 className="border-b border-white/30 pb-2 text-white text-sm sm:text-base"
               >
-                {userData.apellido}
+                {userData.lastName}
               </div>
             </div>
             
@@ -177,7 +307,7 @@ export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
                 id="edad-usuario"
                 className="border-b border-white/30 pb-2 text-white text-sm sm:text-base"
               >
-                {userData.edad}
+                {userData.age}
               </div>
             </div>
             
@@ -192,7 +322,7 @@ export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
                 id="correo-usuario"
                 className="border-b border-white/30 pb-2 text-white text-sm sm:text-base break-all"
               >
-                {userData.correo}
+                {userData.email}
               </div>
             </div>
           </div>
@@ -201,6 +331,18 @@ export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
       case 'editar':
         return (
           <div className="space-y-3 sm:space-y-4 md:space-y-5">
+            {error && (
+              <div className="bg-red-500/10 border border-red-500 text-red-500 px-4 py-3 rounded-md text-sm">
+                {error}
+              </div>
+            )}
+            
+            {success && (
+              <div className="bg-green-500/10 border border-green-500 text-green-500 px-4 py-3 rounded-md text-sm">
+                {success}
+              </div>
+            )}
+            
             <div>
               <label 
                 htmlFor="edit-nombre"
@@ -211,9 +353,10 @@ export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
               <input
                 id="edit-nombre"
                 type="text"
-                value={editData.nombre || ''}
-                onChange={(e) => setEditData({...editData, nombre: e.target.value})}
+                value={editData.firstName}
+                onChange={(e) => setEditData({...editData, firstName: e.target.value})}
                 className="w-full bg-white/10 border border-white/30 rounded-lg px-3 py-2 text-white text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-white"
+                disabled={isLoading}
               />
             </div>
             
@@ -227,9 +370,10 @@ export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
               <input
                 id="edit-apellido"
                 type="text"
-                value={editData.apellido || ''}
-                onChange={(e) => setEditData({...editData, apellido: e.target.value})}
+                value={editData.lastName}
+                onChange={(e) => setEditData({...editData, lastName: e.target.value})}
                 className="w-full bg-white/10 border border-white/30 rounded-lg px-3 py-2 text-white text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-white"
+                disabled={isLoading}
               />
             </div>
             
@@ -243,9 +387,12 @@ export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
               <input
                 id="edit-edad"
                 type="number"
-                value={editData.edad || ''}
-                onChange={(e) => setEditData({...editData, edad: e.target.value})}
+                value={editData.age}
+                onChange={(e) => setEditData({...editData, age: parseInt(e.target.value) || 0})}
                 className="w-full bg-white/10 border border-white/30 rounded-lg px-3 py-2 text-white text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-white"
+                min="13"
+                max="120"
+                disabled={isLoading}
               />
             </div>
             
@@ -259,25 +406,30 @@ export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
               <input
                 id="edit-correo"
                 type="email"
-                value={editData.correo || ''}
-                onChange={(e) => setEditData({...editData, correo: e.target.value})}
+                value={editData.email}
+                onChange={(e) => setEditData({...editData, email: e.target.value})}
                 className="w-full bg-white/10 border border-white/30 rounded-lg px-3 py-2 text-white text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-white"
+                disabled={isLoading}
               />
             </div>
 
             <div className="flex gap-3 pt-4">
               <button
                 onClick={handleSaveProfile}
-                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-white text-sm sm:text-base"
+                disabled={isLoading}
+                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-white text-sm sm:text-base disabled:opacity-50"
               >
-                GUARDAR CAMBIOS
+                {isLoading ? 'GUARDANDO...' : 'GUARDAR CAMBIOS'}
               </button>
               <button
                 onClick={() => {
                   setEditData(userData);
                   setActiveSection('informacion');
+                  setError('');
+                  setSuccess('');
                 }}
-                className="flex-1 bg-gray-700 hover:bg-gray-800 text-white py-2 px-4 rounded-lg font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-white text-sm sm:text-base"
+                disabled={isLoading}
+                className="flex-1 bg-gray-700 hover:bg-gray-800 text-white py-2 px-4 rounded-lg font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-white text-sm sm:text-base disabled:opacity-50"
               >
                 CANCELAR
               </button>
@@ -288,6 +440,18 @@ export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
       case 'seguridad':
         return (
           <div className="space-y-4">
+            {error && (
+              <div className="bg-red-500/10 border border-red-500 text-red-500 px-4 py-3 rounded-md text-sm">
+                {error}
+              </div>
+            )}
+            
+            {success && (
+              <div className="bg-green-500/10 border border-green-500 text-green-500 px-4 py-3 rounded-md text-sm">
+                {success}
+              </div>
+            )}
+            
             <div className="bg-white/5 rounded-lg p-4 mb-4">
               <div className="flex items-start gap-3">
                 <Lock className="w-5 h-5 text-indigo-400 mt-1 flex-shrink-0" />
@@ -312,8 +476,11 @@ export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
                   <input
                     id="current-password"
                     type={showCurrentPassword ? "text" : "password"}
+                    value={passwordData.current}
+                    onChange={(e) => setPasswordData({...passwordData, current: e.target.value})}
                     className="w-full bg-white/10 border border-white/30 rounded-lg px-3 py-2 pr-10 text-white text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-white"
                     placeholder="Ingresa tu contraseña actual"
+                    disabled={isLoading}
                   />
                   <button
                     type="button"
@@ -321,11 +488,7 @@ export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
                     className="absolute right-2 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-white rounded p-1"
                     aria-label={showCurrentPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                   >
-                    {showCurrentPassword ? (
-                      <EyeOff className="w-5 h-5" />
-                    ) : (
-                      <Eye className="w-5 h-5" />
-                    )}
+                    {showCurrentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
               </div>
@@ -341,8 +504,12 @@ export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
                   <input
                     id="new-password"
                     type={showNewPassword ? "text" : "password"}
+                    value={passwordData.new}
+                    onChange={(e) => setPasswordData({...passwordData, new: e.target.value})}
                     className="w-full bg-white/10 border border-white/30 rounded-lg px-3 py-2 pr-10 text-white text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-white"
                     placeholder="Ingresa tu nueva contraseña"
+                    minLength={6}
+                    disabled={isLoading}
                   />
                   <button
                     type="button"
@@ -350,11 +517,7 @@ export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
                     className="absolute right-2 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-white rounded p-1"
                     aria-label={showNewPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                   >
-                    {showNewPassword ? (
-                      <EyeOff className="w-5 h-5" />
-                    ) : (
-                      <Eye className="w-5 h-5" />
-                    )}
+                    {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
               </div>
@@ -370,8 +533,11 @@ export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
                   <input
                     id="confirm-password"
                     type={showConfirmPassword ? "text" : "password"}
+                    value={passwordData.confirm}
+                    onChange={(e) => setPasswordData({...passwordData, confirm: e.target.value})}
                     className="w-full bg-white/10 border border-white/30 rounded-lg px-3 py-2 pr-10 text-white text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-white"
                     placeholder="Confirma tu nueva contraseña"
+                    disabled={isLoading}
                   />
                   <button
                     type="button"
@@ -379,20 +545,17 @@ export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
                     className="absolute right-2 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-white rounded p-1"
                     aria-label={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                   >
-                    {showConfirmPassword ? (
-                      <EyeOff className="w-5 h-5" />
-                    ) : (
-                      <Eye className="w-5 h-5" />
-                    )}
+                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
               </div>
 
               <button
                 onClick={handleChangePassword}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-white text-sm sm:text-base mt-4"
+                disabled={isLoading}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-white text-sm sm:text-base mt-4 disabled:opacity-50"
               >
-                ACTUALIZAR CONTRASEÑA
+                {isLoading ? 'ACTUALIZANDO...' : 'ACTUALIZAR CONTRASEÑA'}
               </button>
             </div>
           </div>
@@ -401,6 +564,12 @@ export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
       case 'eliminar':
         return (
           <div className="space-y-4">
+            {error && (
+              <div className="bg-red-500/10 border border-red-500 text-red-500 px-4 py-3 rounded-md text-sm">
+                {error}
+              </div>
+            )}
+            
             <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-4">
               <div className="flex items-start gap-3">
                 <Trash2 className="w-5 h-5 text-red-400 mt-1 flex-shrink-0" />
@@ -422,25 +591,59 @@ export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
               </ul>
             </div>
 
-            <div className="bg-white/5 rounded-lg p-4 mt-4">
-              <label 
-                htmlFor="confirm-delete"
-                className="text-white font-medium text-xs sm:text-sm block mb-2"
-              >
-                Para confirmar, escribe &quot;ELIMINAR&quot; en mayúsculas:
-              </label>
-              <input
-                id="confirm-delete"
-                type="text"
-                className="w-full bg-white/10 border border-white/30 rounded-lg px-3 py-2 text-white text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500 mb-4"
-                placeholder="ELIMINAR"
-              />
+            <div className="bg-white/5 rounded-lg p-4 mt-4 space-y-4">
+              <div>
+                <label 
+                  htmlFor="confirm-delete"
+                  className="text-white font-medium text-xs sm:text-sm block mb-2"
+                >
+                  Para confirmar, escribe &quot;ELIMINAR&quot; en mayúsculas:
+                </label>
+                <input
+                  id="confirm-delete"
+                  type="text"
+                  value={deleteData.confirmText}
+                  onChange={(e) => setDeleteData({...deleteData, confirmText: e.target.value})}
+                  className="w-full bg-white/10 border border-white/30 rounded-lg px-3 py-2 text-white text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500"
+                  placeholder="ELIMINAR"
+                  disabled={isLoading}
+                />
+              </div>
+              
+              <div>
+                <label 
+                  htmlFor="delete-password"
+                  className="text-white font-medium text-xs sm:text-sm block mb-2"
+                >
+                  Ingresa tu contraseña para confirmar:
+                </label>
+                <div className="relative">
+                  <input
+                    id="delete-password"
+                    type={showDeletePassword ? "text" : "password"}
+                    value={deleteData.password}
+                    onChange={(e) => setDeleteData({...deleteData, password: e.target.value})}
+                    className="w-full bg-white/10 border border-white/30 rounded-lg px-3 py-2 pr-10 text-white text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500"
+                    placeholder="Tu contraseña"
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowDeletePassword(!showDeletePassword)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-white rounded p-1"
+                    aria-label={showDeletePassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  >
+                    {showDeletePassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+              </div>
               
               <button
                 onClick={handleDeleteAccount}
-                className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 text-sm sm:text-base"
+                disabled={isLoading}
+                className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 text-sm sm:text-base disabled:opacity-50"
               >
-                ELIMINAR CUENTA PERMANENTEMENTE
+                {isLoading ? 'ELIMINANDO...' : 'ELIMINAR CUENTA PERMANENTEMENTE'}
               </button>
             </div>
           </div>
@@ -553,7 +756,7 @@ export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
                 className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-white/40 flex items-center justify-center"
                 aria-label="Foto de perfil"
               >
-                <User className="w-8 h-8 sm:w-10 sm:h-10 text-white" strokeWidth={1.5} />
+                <UserIcon className="w-8 h-8 sm:w-10 sm:h-10 text-white" strokeWidth={1.5} />
               </div>
             </div>
 

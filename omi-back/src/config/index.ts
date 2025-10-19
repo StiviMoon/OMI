@@ -25,5 +25,6 @@ export const config = {
     fromEmail: process.env['EMAIL_FROM'] || 'onboarding@resend.dev',
     fromName: process.env['EMAIL_FROM_NAME'] || 'OMI',
     resetPasswordUrl: process.env['RESET_PASSWORD_URL'] || 'http://localhost:3000/reset-password',
+    devEmail: process.env['DEV_EMAIL'] || 'johan.steven.rodriguez@correounivalle.edu.co',
   },
 };

@@ -244,9 +244,9 @@ export const InfiniteCarousel: React.FC<InfiniteCarouselProps> = ({
           scrollBehavior: 'auto' // Importante para el scroll continuo
         }}
       >
-        {movies.map((movie) => (
+        {movies.map((movie, index) => (
           <div
-            key={movie.id}
+            key={`${movie.id}-${index}`}
             className={`
               flex-shrink-0 w-48 md:w-56 group/card transition-transform hover:scale-105
               ${isPreview ? 'cursor-default' : 'cursor-pointer'}
