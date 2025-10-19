@@ -5,6 +5,11 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MovieCard } from '../movie/MovieCard';
 
+/**
+ * Represents the structure of a movie/video displayed in the section.
+ * 
+ * @interface Movie
+ */
 interface Movie {
   id: string;
   title: string;
@@ -22,23 +27,52 @@ interface Movie {
   rating?: number;
 }
 
+/**
+ * Props for the {@link ContentSection} component.
+ * 
+ * @interface ContentSectionProps
+ */
 interface ContentSectionProps {
+  /** Section title displayed at the top. */
   title: string;
+  /** List of movies or videos to render in the carousel. */
   movies: Movie[];
+  /** Optional callback triggered when a movie is added or removed from the list. */
   onAddToList?: (id: string) => void;
 }
 
+/**
+ * Horizontal scrollable content section for displaying videos or movies.
+ * 
+ * This component features:
+ * - Responsive horizontal scrolling with chevron navigation
+ * - Favorite management via `localStorage`
+ * - Smooth scroll behavior depending on screen width
+ * - Dynamic visibility of navigation buttons based on scroll position
+ * 
+ * @component
+ * @example
+ * <ContentSection
+ *   title="Popular Videos"
+ *   movies={movies}
+ *   onAddToList={(id) => console.log("Added to list:", id)}
+ * />
+ * 
+ * @param {ContentSectionProps} props - The component props.
+ * @returns {JSX.Element} A horizontally scrollable video section.
+ */
 export const ContentSection: React.FC<ContentSectionProps> = ({ 
   title, 
   movies, 
   onAddToList 
 }) => {
+  // ======= REFS & STATE =======
   const scrollRef = useRef<HTMLDivElement>(null);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
 
-  // Cargar favoritos del localStorage
+  // ======= LOAD FAVORITES =======
   useEffect(() => {
     const savedFavorites = localStorage.getItem('favorites');
     if (savedFavorites) {
@@ -46,7 +80,10 @@ export const ContentSection: React.FC<ContentSectionProps> = ({
     }
   }, []);
 
-  // Verificar si se puede hacer scroll
+  /**
+   * Checks whether the user can scroll left or right.
+   * Updates chevron visibility accordingly.
+   */
   const checkScroll = () => {
     if (scrollRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
@@ -55,6 +92,7 @@ export const ContentSection: React.FC<ContentSectionProps> = ({
     }
   };
 
+  // Add scroll listener
   useEffect(() => {
     checkScroll();
     const scrollElement = scrollRef.current;
@@ -65,7 +103,11 @@ export const ContentSection: React.FC<ContentSectionProps> = ({
     }
   }, [movies]);
 
-  // Obtener scroll amount dinámico basado en el ancho de pantalla
+  /**
+   * Calculates scroll distance dynamically based on current screen size.
+   * 
+   * @returns {number} The amount of pixels to scroll horizontally.
+   */
   const getScrollAmount = () => {
     if (typeof window !== 'undefined') {
       if (window.innerWidth < 640) return 300;
@@ -75,20 +117,26 @@ export const ContentSection: React.FC<ContentSectionProps> = ({
     return 800;
   };
 
+  /**
+   * Handles horizontal scrolling behavior.
+   * Loops around when the user reaches either end of the carousel.
+   * 
+   * @param {'left' | 'right'} direction - Scroll direction.
+   */
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
       const scrollAmount = getScrollAmount();
 
       if (direction === 'right') {
-        // Si llegamos al final, volver al inicio
+        // Loop to start if end is reached
         if (scrollLeft + clientWidth >= scrollWidth - 10) {
           scrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
         } else {
           scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
         }
       } else {
-        // Si estamos al inicio, ir al final
+        // Loop to end if at start
         if (scrollLeft <= 10) {
           scrollRef.current.scrollTo({ left: scrollWidth, behavior: 'smooth' });
         } else {
@@ -98,6 +146,12 @@ export const ContentSection: React.FC<ContentSectionProps> = ({
     }
   };
 
+  /**
+   * Adds or removes a movie from the favorites list.
+   * Updates `localStorage` and triggers the optional external callback.
+   * 
+   * @param {string} videoId - The ID of the movie to toggle.
+   */
   const handleAddToList = (videoId: string) => {
     setFavorites(prev => {
       let newFavorites;
@@ -115,14 +169,16 @@ export const ContentSection: React.FC<ContentSectionProps> = ({
     });
   };
 
+  // ======= RENDER =======
   return (
     <section className="py-8 relative w-full">
+      {/* Section Header */}
       <div className="flex items-center justify-between mb-6 px-4 sm:px-8 lg:px-16">
         <h2 className="text-2xl font-semibold text-white">{title}</h2>
       </div>
       
       <div className="relative px-4 sm:px-8 lg:px-16 group">
-        {/* Chevron Izquierdo */}
+        {/* Left Chevron Button */}
         {canScrollLeft && (
           <div className="hidden md:flex absolute left-4 sm:left-8 lg:left-16 top-0 bottom-0 z-10 items-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
             <Button
@@ -136,7 +192,7 @@ export const ContentSection: React.FC<ContentSectionProps> = ({
           </div>
         )}
 
-        {/* Contenedor de scroll */}
+        {/* Scrollable Movie Container */}
         <div 
           ref={scrollRef} 
           className="flex gap-4 overflow-x-scroll pb-4 scroll-smooth"
@@ -165,7 +221,7 @@ export const ContentSection: React.FC<ContentSectionProps> = ({
           ))}
         </div>
 
-        {/* Chevron Derecho */}
+        {/* Right Chevron Button */}
         {canScrollRight && (
           <div className="hidden md:flex absolute right-4 sm:right-8 lg:right-16 top-0 bottom-0 z-10 items-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
             <Button

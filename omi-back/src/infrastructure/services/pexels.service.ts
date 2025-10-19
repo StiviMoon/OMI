@@ -7,28 +7,47 @@ import {
   SimplifiedVideo,
 } from '../../types/pexels.types';
 
-export interface SearchVideosOptions {
-  query: string;
-  page?: number;
-  perPage?: number;
-  orientation?: 'landscape' | 'portrait' | 'square';
-  size?: 'large' | 'medium' | 'small';
-  minDuration?: number;
-  maxDuration?: number;
-}
+/**
+ * Options for searching Pexels videos.
+ * 
+ * @typedef {Object} SearchVideosOptions
+ * @property {string} query - Search query text.
+ * @property {number} [page] - Page number for pagination.
+ * @property {number} [perPage] - Number of results per page.
+ * @property {'landscape'|'portrait'|'square'} [orientation] - Video orientation filter.
+ * @property {'large'|'medium'|'small'} [size] - Video size filter.
+ * @property {number} [minDuration] - Minimum video duration in seconds.
+ * @property {number} [maxDuration] - Maximum video duration in seconds.
+ */
 
-export interface GetPopularVideosOptions {
-  page?: number;
-  perPage?: number;
-  minWidth?: number;
-  minHeight?: number;
-  minDuration?: number;
-  maxDuration?: number;
-}
+/**
+ * Options for retrieving popular Pexels videos.
+ * 
+ * @typedef {Object} GetPopularVideosOptions
+ * @property {number} [page] - Page number for pagination.
+ * @property {number} [perPage] - Number of results per page.
+ * @property {number} [minWidth] - Minimum width of videos.
+ * @property {number} [minHeight] - Minimum height of videos.
+ * @property {number} [minDuration] - Minimum duration in seconds.
+ * @property {number} [maxDuration] - Maximum duration in seconds.
+ */
 
+/**
+ * Service class that interacts with the Pexels Video API.
+ * 
+ * This class provides methods to search, fetch, and simplify videos
+ * using the Pexels API, making the data easier to use in frontend applications.
+ */
 export class PexelsService {
+  /** Axios instance configured for Pexels API requests. */
   private axiosInstance: AxiosInstance;
 
+  /**
+   * Creates an instance of the PexelsService and initializes Axios with authentication headers.
+   * 
+   * @example
+   * const pexelsService = new PexelsService();
+   */
   constructor() {
     this.axiosInstance = axios.create({
       baseURL: 'https://api.pexels.com',
@@ -39,7 +58,15 @@ export class PexelsService {
   }
 
   /**
-   * Search for videos with optional filters
+   * Searches for videos on Pexels with optional filters.
+   * 
+   * @async
+   * @param {SearchVideosOptions} options - Search filters and parameters.
+   * @returns {Promise<PexelsVideosSearchResponse>} A promise that resolves with the search response.
+   * @throws {Error} If the Pexels API request fails.
+   * 
+   * @example
+   * const response = await pexelsService.searchVideos({ query: 'nature', perPage: 10 });
    */
   async searchVideos(options: SearchVideosOptions): Promise<PexelsVideosSearchResponse> {
     try {
@@ -54,10 +81,7 @@ export class PexelsService {
       if (options.minDuration) params.min_duration = options.minDuration;
       if (options.maxDuration) params.max_duration = options.maxDuration;
 
-      const response = await this.axiosInstance.get<PexelsVideosSearchResponse>('/videos/search', {
-        params,
-      });
-
+      const response = await this.axiosInstance.get<PexelsVideosSearchResponse>('/videos/search', { params });
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -68,7 +92,15 @@ export class PexelsService {
   }
 
   /**
-   * Get popular/curated videos with optional filters
+   * Retrieves popular or curated videos from Pexels with optional filters.
+   * 
+   * @async
+   * @param {GetPopularVideosOptions} [options={}] - Options for filtering and pagination.
+   * @returns {Promise<PexelsPopularVideosResponse>} A promise that resolves with the popular videos.
+   * @throws {Error} If the Pexels API request fails.
+   * 
+   * @example
+   * const popularVideos = await pexelsService.getPopularVideos({ perPage: 5 });
    */
   async getPopularVideos(options: GetPopularVideosOptions = {}): Promise<PexelsPopularVideosResponse> {
     try {
@@ -82,10 +114,7 @@ export class PexelsService {
       if (options.minDuration) params.min_duration = options.minDuration;
       if (options.maxDuration) params.max_duration = options.maxDuration;
 
-      const response = await this.axiosInstance.get<PexelsPopularVideosResponse>('/videos/popular', {
-        params,
-      });
-
+      const response = await this.axiosInstance.get<PexelsPopularVideosResponse>('/videos/popular', { params });
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -96,7 +125,15 @@ export class PexelsService {
   }
 
   /**
-   * Get a specific video by ID
+   * Retrieves a specific video by its Pexels ID.
+   * 
+   * @async
+   * @param {number} id - The Pexels video ID.
+   * @returns {Promise<PexelsVideo>} A promise that resolves with the video data.
+   * @throws {Error} If the video cannot be retrieved.
+   * 
+   * @example
+   * const video = await pexelsService.getVideoById(123456);
    */
   async getVideoById(id: number): Promise<PexelsVideo> {
     try {
@@ -111,8 +148,14 @@ export class PexelsService {
   }
 
   /**
-   * Simplify video data for frontend consumption
-   * Returns only the most relevant information
+   * Simplifies a Pexels video object to a more concise format
+   * suitable for frontend display.
+   * 
+   * @param {PexelsVideo} video - The raw video object from Pexels.
+   * @returns {SimplifiedVideo} A simplified version of the video object.
+   * 
+   * @example
+   * const simplified = pexelsService.simplifyVideo(video);
    */
   simplifyVideo(video: PexelsVideo): SimplifiedVideo {
     return {
@@ -128,22 +171,27 @@ export class PexelsService {
         url: video.user.url,
       },
       files: video.video_files
-        .filter(file => file.quality !== 'sd') // Filter out SD quality
+        .filter(file => file.quality !== 'sd')
         .map(file => ({
           quality: file.quality,
           width: file.width,
           height: file.height,
           link: file.link,
         }))
-        .sort((a, b) => b.width - a.width), // Sort by quality (descending)
+        .sort((a, b) => b.width - a.width),
     };
   }
 
   /**
-   * Simplify multiple videos
+   * Simplifies an array of Pexels videos into lightweight objects.
+   * 
+   * @param {PexelsVideo[]} videos - Array of raw Pexels video objects.
+   * @returns {SimplifiedVideo[]} Array of simplified video objects.
+   * 
+   * @example
+   * const simplifiedList = pexelsService.simplifyVideos(response.videos);
    */
   simplifyVideos(videos: PexelsVideo[]): SimplifiedVideo[] {
     return videos.map(video => this.simplifyVideo(video));
   }
 }
-

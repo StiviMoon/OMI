@@ -6,26 +6,57 @@ import { Search, X, Loader2, Film, SlidersHorizontal } from 'lucide-react';
 import { videosAPI } from '@/lib/api/videos';
 import { Movie } from '@/lib/types';
 
+/**
+ * Props for the {@link SearchModal} component.
+ * 
+ * @interface SearchModalProps
+ */
 interface SearchModalProps {
+  /** Whether the modal is currently visible. */
   isOpen: boolean;
+  /** Function to close the modal. */
   onClose: () => void;
+  /** Optional callback to handle video selection. */
   onVideoSelect?: (movie: Movie) => void;
 }
 
+/**
+ * Search modal component for browsing videos dynamically.
+ * 
+ * This component provides:
+ * - Debounced search with live API requests.
+ * - Filter controls for orientation, size, and duration.
+ * - Smooth UX with loader, error handling, and transitions.
+ * - Keyboard and mouse accessibility.
+ * 
+ * @component
+ * @example
+ * <SearchModal
+ *   isOpen={true}
+ *   onClose={() => console.log('Closed')}
+ *   onVideoSelect={(movie) => console.log('Selected video:', movie)}
+ * />
+ * 
+ * @param {SearchModalProps} props - Component props.
+ * @returns {JSX.Element | null} The rendered search modal.
+ */
 export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onVideoSelect }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  
-  // Filtros
+
+  // ======= FILTER STATES =======
   const [orientation, setOrientation] = useState<'landscape' | 'portrait' | 'square' | ''>('');
   const [size, setSize] = useState<'large' | 'medium' | 'small' | ''>('');
   const [minDuration, setMinDuration] = useState<string>('');
   const [maxDuration, setMaxDuration] = useState<string>('');
 
-  // Debounce search
+  // ======= DEBOUNCED SEARCH =======
+  /**
+   * Automatically triggers a debounced search after typing stops.
+   */
   useEffect(() => {
     if (!searchQuery.trim()) {
       setMovies([]);
@@ -40,6 +71,14 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onVid
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, orientation, size, minDuration, maxDuration]);
 
+  // ======= SEARCH FUNCTION =======
+  /**
+   * Fetches videos from the backend using the provided filters.
+   * 
+   * @async
+   * @function
+   * @returns {Promise<void>}
+   */
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
 
@@ -59,32 +98,39 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onVid
         per_page: 15,
       };
 
-      if (orientation) params.orientation = orientation as 'landscape' | 'portrait' | 'square';
-      if (size) params.size = size as 'large' | 'medium' | 'small';
+      if (orientation) params.orientation = orientation;
+      if (size) params.size = size;
       if (minDuration) params.min_duration = parseInt(minDuration);
       if (maxDuration) params.max_duration = parseInt(maxDuration);
 
       const results = await videosAPI.search(params as import('@/lib/types').SearchParams);
       setMovies(results);
     } catch (err) {
-      console.error('❌ Error en búsqueda:', err);
-      setError(err instanceof Error ? err.message : 'Error al buscar videos');
+      console.error('❌ Search error:', err);
+      setError(err instanceof Error ? err.message : 'Error while searching videos');
       setMovies([]);
     } finally {
       setLoading(false);
     }
   };
 
+  // ======= EVENT HANDLERS =======
+  /**
+   * Handles the selection of a video and triggers the parent callback.
+   */
   const handleMovieClick = (movie: Movie) => {
-    onClose(); // Cierra el modal de búsqueda
-    // Si hay un callback, llama al padre para que maneje la apertura del video
+    onClose();
     if (onVideoSelect) {
+      // Small delay for smoother UX
       setTimeout(() => {
         onVideoSelect(movie);
       }, 150);
     }
   };
 
+  /**
+   * Clears all active filter fields.
+   */
   const clearFilters = () => {
     setOrientation('');
     setSize('');
@@ -94,37 +140,39 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onVid
 
   if (!isOpen) return null;
 
+  // ======= RENDER =======
   return (
     <div className="fixed inset-0 z-[100] flex items-start justify-center pt-20">
-      {/* Overlay */}
+      {/* ======= BACKDROP ======= */}
       <div 
         className="absolute inset-0 bg-black/80 backdrop-blur-sm"
         onClick={onClose}
       />
-      
-      {/* Modal Content */}
+
+      {/* ======= MODAL CONTAINER ======= */}
       <div className="relative w-full max-w-4xl mx-4 bg-gray-900 rounded-lg shadow-2xl border border-gray-700">
-        {/* Header */}
+        {/* ======= HEADER ======= */}
         <div className="flex items-center justify-between p-4 border-b border-gray-700">
-          <h2 className="text-xl font-semibold text-white">Buscar Videos</h2>
+          <h2 className="text-xl font-semibold text-white">Search Videos</h2>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowFilters(!showFilters)}
               className="text-gray-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-gray-800"
-              title="Filtros"
+              title="Filters"
             >
               <SlidersHorizontal className="w-5 h-5" />
             </button>
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-white transition-colors p-1"
+              aria-label="Close search modal"
             >
               <X className="w-6 h-6" />
             </button>
           </div>
         </div>
 
-        {/* Search Input */}
+        {/* ======= SEARCH INPUT ======= */}
         <div className="p-6 pb-4">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -132,61 +180,61 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onVid
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar películas, series, anime..."
+              placeholder="Search movies, series, or anime..."
               className="w-full bg-gray-800 text-white pl-12 pr-4 py-3 rounded-lg border border-gray-700 focus:outline-none focus:border-blue-500 transition-colors"
               autoFocus
             />
           </div>
         </div>
 
-        {/* Filters */}
+        {/* ======= FILTER PANEL ======= */}
         {showFilters && (
           <div className="px-6 pb-4 space-y-4 border-b border-gray-700">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Orientation */}
+              {/* Orientation Filter */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Orientación
+                  Orientation
                 </label>
                 <select
                   value={orientation}
                   onChange={(e) => setOrientation(e.target.value as 'landscape' | 'portrait' | 'square' | '')}
                   className="w-full bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 focus:outline-none focus:border-blue-500"
                 >
-                  <option value="">Todas</option>
-                  <option value="landscape">Horizontal</option>
-                  <option value="portrait">Vertical</option>
-                  <option value="square">Cuadrado</option>
+                  <option value="">All</option>
+                  <option value="landscape">Landscape</option>
+                  <option value="portrait">Portrait</option>
+                  <option value="square">Square</option>
                 </select>
               </div>
 
-              {/* Size */}
+              {/* Size Filter */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Tamaño
+                  Size
                 </label>
                 <select
                   value={size}
                   onChange={(e) => setSize(e.target.value as 'large' | 'medium' | 'small' | '')}
                   className="w-full bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 focus:outline-none focus:border-blue-500"
                 >
-                  <option value="">Todos</option>
-                  <option value="large">Grande</option>
-                  <option value="medium">Mediano</option>
-                  <option value="small">Pequeño</option>
+                  <option value="">All</option>
+                  <option value="large">Large</option>
+                  <option value="medium">Medium</option>
+                  <option value="small">Small</option>
                 </select>
               </div>
 
               {/* Min Duration */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Duración mínima (segundos)
+                  Min Duration (seconds)
                 </label>
                 <input
                   type="number"
                   value={minDuration}
                   onChange={(e) => setMinDuration(e.target.value)}
-                  placeholder="Ej: 10"
+                  placeholder="e.g., 10"
                   className="w-full bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 focus:outline-none focus:border-blue-500"
                 />
               </div>
@@ -194,13 +242,13 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onVid
               {/* Max Duration */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Duración máxima (segundos)
+                  Max Duration (seconds)
                 </label>
                 <input
                   type="number"
                   value={maxDuration}
                   onChange={(e) => setMaxDuration(e.target.value)}
-                  placeholder="Ej: 60"
+                  placeholder="e.g., 60"
                   className="w-full bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 focus:outline-none focus:border-blue-500"
                 />
               </div>
@@ -210,12 +258,12 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onVid
               onClick={clearFilters}
               className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
             >
-              Limpiar filtros
+              Clear Filters
             </button>
           </div>
         )}
 
-        {/* Results Area */}
+        {/* ======= RESULTS ======= */}
         <div className="p-6 pt-4 max-h-[500px] overflow-y-auto">
           {loading ? (
             <div className="flex items-center justify-center py-12">
@@ -228,7 +276,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onVid
           ) : searchQuery && movies.length > 0 ? (
             <div className="space-y-3">
               <div className="text-gray-400 text-sm mb-4">
-                {movies.length} resultados para &quot;{searchQuery}&quot;
+                {movies.length} results for &quot;{searchQuery}&quot;
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -254,7 +302,8 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onVid
                       )}
                       {movie.duration && movie.duration > 0 && (
                         <div className="absolute bottom-1 right-1 bg-black/80 px-1.5 py-0.5 rounded text-xs text-white">
-                          {Math.floor(movie.duration / 60)}:{String(Math.floor(movie.duration % 60)).padStart(2, '0')}
+                          {Math.floor(movie.duration / 60)}:
+                          {String(Math.floor(movie.duration % 60)).padStart(2, '0')}
                         </div>
                       )}
                     </div>
@@ -263,7 +312,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onVid
                         {movie.title}
                       </h3>
                       <p className="text-gray-400 text-xs">
-                        {movie.width}x{movie.height} • {movie.user?.name || 'Desconocido'}
+                        {movie.width}x{movie.height} • {movie.user?.name || 'Unknown'}
                       </p>
                     </div>
                   </div>
@@ -273,12 +322,12 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onVid
           ) : searchQuery && movies.length === 0 ? (
             <div className="text-center text-gray-500 py-8">
               <Search className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p>No se encontraron resultados para &quot;{searchQuery}&quot;</p>
+              <p>No results found for &quot;{searchQuery}&quot;</p>
             </div>
           ) : (
             <div className="text-center text-gray-500 py-8">
               <Search className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p>Escribe para buscar contenido</p>
+              <p>Start typing to search content</p>
             </div>
           )}
         </div>

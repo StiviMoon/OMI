@@ -1,12 +1,33 @@
 import { Request, Response, NextFunction } from 'express';
 import { PexelsService } from '../../infrastructure/services/pexels.service';
 
+/**
+ * Controller responsible for handling video-related routes
+ * and communication with the Pexels API through the PexelsService.
+ */
 export class PexelsController {
+  /**
+   * Creates an instance of PexelsController.
+   * 
+   * @param {PexelsService} pexelsService - Service used to interact with the Pexels API.
+   */
   constructor(private pexelsService: PexelsService) {}
 
   /**
-   * Search videos with filters
-   * GET /api/videos/search
+   * Handles video search requests using query filters.
+   * 
+   * Validates query parameters and delegates the search to the PexelsService.
+   * Returns paginated, simplified video results.
+   * 
+   * @async
+   * @route GET /api/videos/search
+   * @param {Request} req - Express request containing search filters.
+   * @param {Response} res - Express response used to send the results.
+   * @param {NextFunction} next - Express next function for error handling.
+   * @returns {Promise<void>} A promise that resolves once the response is sent.
+   * 
+   * @example
+   * GET /api/videos/search?query=nature&page=1&per_page=10
    */
   searchVideos = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -20,7 +41,7 @@ export class PexelsController {
         max_duration,
       } = req.query;
 
-      // Validate required query parameter
+      // Validate query
       if (!query || typeof query !== 'string') {
         res.status(400).json({
           success: false,
@@ -29,7 +50,7 @@ export class PexelsController {
         return;
       }
 
-      // Parse and validate pagination
+      // Parse pagination
       const pageNum = parseInt(page as string, 10);
       const perPageNum = parseInt(per_page as string, 10);
 
@@ -49,7 +70,7 @@ export class PexelsController {
         return;
       }
 
-      // Validate orientation if provided
+      // Validate optional filters
       if (orientation && !['landscape', 'portrait', 'square'].includes(orientation as string)) {
         res.status(400).json({
           success: false,
@@ -58,7 +79,6 @@ export class PexelsController {
         return;
       }
 
-      // Validate size if provided
       if (size && !['large', 'medium', 'small'].includes(size as string)) {
         res.status(400).json({
           success: false,
@@ -97,8 +117,17 @@ export class PexelsController {
   };
 
   /**
-   * Get popular/curated videos
-   * GET /api/videos/popular
+   * Retrieves curated/popular videos from Pexels with optional filters.
+   * 
+   * @async
+   * @route GET /api/videos/popular
+   * @param {Request} req - Express request containing optional query parameters.
+   * @param {Response} res - Express response used to send the results.
+   * @param {NextFunction} next - Express next function for error handling.
+   * @returns {Promise<void>} A promise that resolves once the response is sent.
+   * 
+   * @example
+   * GET /api/videos/popular?page=1&per_page=10
    */
   getPopularVideos = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -111,7 +140,6 @@ export class PexelsController {
         max_duration,
       } = req.query;
 
-      // Parse and validate pagination
       const pageNum = parseInt(page as string, 10);
       const perPageNum = parseInt(per_page as string, 10);
 
@@ -131,7 +159,7 @@ export class PexelsController {
         return;
       }
 
-      // Build options
+      // Build filter options
       const options = {
         page: pageNum,
         perPage: perPageNum,
@@ -160,8 +188,17 @@ export class PexelsController {
   };
 
   /**
-   * Get video by ID
-   * GET /api/videos/:id
+   * Retrieves a specific video from Pexels by its ID.
+   * 
+   * @async
+   * @route GET /api/videos/:id
+   * @param {Request} req - Express request containing the video ID as a route parameter.
+   * @param {Response} res - Express response used to send the video data.
+   * @param {NextFunction} next - Express next function for error handling.
+   * @returns {Promise<void>} A promise that resolves once the response is sent.
+   * 
+   * @example
+   * GET /api/videos/123456
    */
   getVideoById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -176,7 +213,6 @@ export class PexelsController {
       }
 
       const videoId = parseInt(id, 10);
-
       if (isNaN(videoId)) {
         res.status(400).json({
           success: false,
@@ -197,4 +233,3 @@ export class PexelsController {
     }
   };
 }
-

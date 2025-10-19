@@ -1,7 +1,26 @@
 import { Request, Response, NextFunction } from 'express';
 
-// Custom error class for better error handling
+/**
+ * Custom application error class for consistent error handling.
+ * 
+ * This class allows distinguishing between operational errors (expected, user-related)
+ * and programmer errors (unexpected, system-related) by including a status code
+ * and an operational flag.
+ * 
+ * @class
+ * @extends {Error}
+ */
 export class AppError extends Error {
+  /**
+   * Creates an instance of AppError.
+   * 
+   * @param {number} statusCode - HTTP status code associated with the error.
+   * @param {string} message - Descriptive error message.
+   * @param {boolean} [isOperational=true] - Indicates if the error is operational (user-related).
+   * 
+   * @example
+   * throw new AppError(404, 'User not found');
+   */
   constructor(
     public statusCode: number,
     public message: string,
@@ -13,6 +32,34 @@ export class AppError extends Error {
   }
 }
 
+/**
+ * Global Express error-handling middleware.
+ * 
+ * This middleware captures and logs all unhandled exceptions or rejections
+ * that occur during request processing. It differentiates between known
+ * operational errors (instances of AppError) and unexpected ones, returning
+ * structured JSON responses accordingly.
+ * 
+ * @function
+ * @param {Error|AppError} error - The error object thrown during request handling.
+ * @param {Request} req - Express request object.
+ * @param {Response} res - Express response object used to send the error response.
+ * @param {NextFunction} next - Express next function (not used, but required for middleware signature).
+ * 
+ * @example
+ * import express from 'express';
+ * import { errorHandler, AppError } from './middleware/error.middleware';
+ * 
+ * const app = express();
+ * 
+ * // Example route throwing a custom error
+ * app.get('/example', (req, res) => {
+ *   throw new AppError(400, 'Invalid input data');
+ * });
+ * 
+ * // Global error handler
+ * app.use(errorHandler);
+ */
 export const errorHandler = (
   error: Error | AppError,
   req: Request,
@@ -22,8 +69,8 @@ export const errorHandler = (
 ): void => {
   console.error('Error:', error.message);
   console.error('Stack:', error.stack);
-  
-  // Handle custom AppError
+
+  // Handle custom operational errors
   if (error instanceof AppError) {
     res.status(error.statusCode).json({
       success: false,
@@ -32,7 +79,7 @@ export const errorHandler = (
     return;
   }
 
-  // Handle generic errors
+  // Handle unknown or generic errors
   res.status(500).json({
     success: false,
     error: error.message || 'Internal server error',
