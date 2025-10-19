@@ -6,6 +6,7 @@ import "./globals.css";
 import { Footer } from '@/components/footer/Footer';
 import ModalCuenta from '@/components/ui/Cuenta/ModalCuenta';
 import { SearchModal } from "@/components/ui/sidebar/SearchModal";
+import { AuthProvider } from '@/lib/context/AuthContext';
 
 
 const geistSans = Geist({
@@ -30,18 +31,20 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
-        <Footer onOpenAccountModal={() => setIsCuentaModalOpen(true)}
-        onOpenSearchModal={()=> setIsSearchModalOpen(true)} />
-        
-        <ModalCuenta 
-          isOpen={isCuentaModalOpen}
-          onClose={() => setIsCuentaModalOpen(false)}
-        />
-        <SearchModal 
-          isOpen={isSearchModalOpen}
-          onClose={() => setIsSearchModalOpen(false)}
-        />
+        <AuthProvider>
+          {children}
+          <Footer onOpenAccountModal={() => setIsCuentaModalOpen(true)}
+          onOpenSearchModal={()=> setIsSearchModalOpen(true)} />
+          
+          <ModalCuenta 
+            isOpen={isCuentaModalOpen}
+            onClose={() => setIsCuentaModalOpen(false)}
+          />
+          <SearchModal 
+            isOpen={isSearchModalOpen}
+            onClose={() => setIsSearchModalOpen(false)}
+          />
+        </AuthProvider>
       </body>
     </html>
   );

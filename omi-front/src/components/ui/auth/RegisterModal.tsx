@@ -7,6 +7,7 @@ import { X, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { authApi } from '@/lib/api/auth';
+import { useAuthContext } from '@/lib/context/AuthContext';
 
 interface RegisterModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ interface RegisterModalProps {
 
 export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onOpenLogin }) => {
   const router = useRouter();
+  const { login } = useAuthContext();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -97,9 +99,8 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
         age: age,
       });
 
-      // Registro exitoso - guardar token
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      // Usar el login del contexto que maneja todo
+      login(response.data.user, response.data.token);
       
       // Cerrar el modal
       onClose();

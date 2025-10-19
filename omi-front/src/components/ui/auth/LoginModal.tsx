@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { X, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { authApi } from '@/lib/api/auth';
+import { useAuthContext } from '@/lib/context/AuthContext';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   onOpenForgotPassword 
 }) => {
   const router = useRouter();
+  const { login } = useAuthContext();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [mounted, setMounted] = useState(false);
@@ -67,9 +69,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         password,
       });
 
-      // Login exitoso - guardar token y usuario
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      // Usar el login del contexto que maneja todo
+      login(response.data.user, response.data.token);
       
       // Cerrar el modal
       onClose();
