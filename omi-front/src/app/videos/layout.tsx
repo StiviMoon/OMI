@@ -1,5 +1,7 @@
+'use client';
+
 import React from 'react';
-import { Sidebar } from '@/components/ui/sidebar/sidebar';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
 export default function VideosLayout({
   children,
@@ -7,9 +9,8 @@ export default function VideosLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen bg-gradient-to-b from-black via-gray-900 to-black overflow-x-hidden">
-      <Sidebar />
+    <ProtectedRoute>
       {children}
-    </div>
+    </ProtectedRoute>
   );
 }

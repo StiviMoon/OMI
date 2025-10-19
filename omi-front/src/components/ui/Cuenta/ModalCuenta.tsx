@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { User as UserIcon, ChevronDown, X, Lock, Trash2, Eye, EyeOff } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { authApi } from '@/lib/api/auth';
+import { useAuthContext } from '@/lib/context/AuthContext';
 
 interface ModalCuentaProps {
   isOpen: boolean;
@@ -31,7 +31,7 @@ type Section = 'informacion' | 'editar' | 'seguridad' | 'eliminar';
 
 export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
   const modalRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
+  const { logout, updateUser } = useAuthContext();
   const [activeSection, setActiveSection] = useState<Section>('informacion');
   const [userData, setUserData] = useState<UserData>({
     firstName: '',
@@ -115,10 +115,8 @@ export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
   }, [isOpen]);
 
   const handleLogout = () => {
-    authApi.logout();
-    localStorage.removeItem('user');
     onClose();
-    router.push('/');
+    logout(); // Usa el logout del contexto que maneja todo
   };
 
   const loadUserProfile = useCallback(async () => {
@@ -138,10 +136,9 @@ export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
     } catch (err) {
       console.error('Error loading profile:', err);
       // Si falla, probablemente el token expiró
-      handleLogout();
+      logout();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [logout]);
 
   // Cargar datos del usuario al abrir
   useEffect(() => {
@@ -157,14 +154,19 @@ export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
     setIsLoading(true);
 
     try {
-      await authApi.updateProfile({
+      const response = await authApi.updateProfile({
         firstName: editData.firstName,
         lastName: editData.lastName,
         age: editData.age,
         email: editData.email,
       });
 
+      // Actualizar estado local
       setUserData(editData);
+      
+      // Actualizar contexto global con datos del servidor
+      updateUser(response.data.user);
+      
       setSuccess('Perfil actualizado exitosamente');
       
       setTimeout(() => {
