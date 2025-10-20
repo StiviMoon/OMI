@@ -123,7 +123,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       
       {/* Modal */}
       <div className="relative z-10 w-full max-w-md mx-auto">
-        <div className="bg-gray-900/95 backdrop-blur-md rounded-lg shadow-2xl border border-gray-800">
+        <div className="bg-slate-900 backdrop-blur-md rounded-lg shadow-2xl border border-gray-800">
           {/* Close Button */}
           <button
             onClick={onClose}
@@ -146,7 +146,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
             {/* Title */}
             <h2 className="text-2xl font-bold text-white text-center mb-8">
-              INICIAR SESIÓN
+              Iniciar sesión
             </h2>
 
             {/* Form */}
@@ -225,7 +225,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 disabled={isLoading}
                 className="w-full bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-700 hover:to-purple-700 text-white font-semibold py-3 rounded-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'INICIANDO SESIÓN...' : 'INICIAR SESIÓN'}
+                {isLoading ? 'Iniciando sesión...' : 'Iniciar sesión'}
               </Button>
             </form>
 
@@ -235,7 +235,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 ¿No tienes cuenta?{' '}
                 <button 
                   onClick={handleRegisterClick}
-                  className="text-green-500 hover:text-green-400 font-semibold transition-colors disabled:opacity-50"
+                  className="text-cyan-500 hover:text-cyan-400 font-semibold transition-colors disabled:opacity-50"
                   type="button"
                   disabled={isLoading}
                 >
