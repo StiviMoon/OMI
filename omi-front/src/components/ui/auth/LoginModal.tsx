@@ -208,7 +208,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               </div>
 
               {/* Forgot Password */}
-              <div className="text-right">
+              <div className="text-center">
                 <button
                   type="button"
                   onClick={handleForgotPasswordClick}
