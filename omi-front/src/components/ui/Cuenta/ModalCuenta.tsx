@@ -421,7 +421,7 @@ export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
                 disabled={isLoading}
                 className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-white text-sm sm:text-base disabled:opacity-50"
               >
-                {isLoading ? 'GUARDANDO...' : 'GUARDAR CAMBIOS'}
+                {isLoading ? 'Guardando...' : 'Guardar cambios'}
               </button>
               <button
                 onClick={() => {
@@ -433,7 +433,7 @@ export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
                 disabled={isLoading}
                 className="flex-1 bg-gray-700 hover:bg-gray-800 text-white py-2 px-4 rounded-lg font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-white text-sm sm:text-base disabled:opacity-50"
               >
-                CANCELAR
+                Cancelar
               </button>
             </div>
           </div>
@@ -557,7 +557,7 @@ export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
                 disabled={isLoading}
                 className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-white text-sm sm:text-base mt-4 disabled:opacity-50"
               >
-                {isLoading ? 'ACTUALIZANDO...' : 'ACTUALIZAR CONTRASEÑA'}
+                {isLoading ? 'Actualizando...' : 'Actualizar contraseña'}
               </button>
             </div>
           </div>
@@ -645,7 +645,7 @@ export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
                 disabled={isLoading}
                 className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 text-sm sm:text-base disabled:opacity-50"
               >
-                {isLoading ? 'ELIMINANDO...' : 'ELIMINAR CUENTA PERMANENTEMENTE'}
+                {isLoading ? 'Eliminando...' : 'Eliminar cuenta permanentemente'}
               </button>
             </div>
           </div>
@@ -664,7 +664,7 @@ export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
         ref={modalRef}
         tabIndex={-1}
         aria-labelledby="modal-title"
-        className="bg-gradient-to-br from-grey-200 via-grey-300 to-teal-800 rounded-2xl p-8 w-full max-w-5xl relative"
+        className="bg-gradient-to-br from-from-[#10202799] to-[#3A748D99] backdrop-blur-md rounded-2xl p-8 w-full max-w-5xl relative"
         onClick={(e) => e.stopPropagation()}
       >
         
@@ -690,7 +690,7 @@ export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
           id="modal-title"
           className="text-white text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 md:mb-8"
         >
-          MI CUENTA
+          Mi cuenta
         </h1>
 
         <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 md:gap-8 items-start">
@@ -773,14 +773,14 @@ export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
                   className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-white text-sm sm:text-base"
                   aria-label="Editar información del perfil"
                 >
-                  EDITAR PERFIL
+                  Editar perfil
                 </button>
                 <button 
                   onClick={handleLogout}
                   className="flex-1 bg-gray-800 hover:bg-gray-900 text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-white text-sm sm:text-base"
                   aria-label="Cerrar sesión y volver al inicio"
                 >
-                  CERRAR SESION
+                  Cerrar sesión
                 </button>
               </div>
             )}
