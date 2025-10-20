@@ -213,7 +213,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
                   type="text"
                   value={formData.firstName}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
                   placeholder="Juan"
                   required
                   disabled={isLoading}
@@ -231,7 +231,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
                   type="text"
                   value={formData.lastName}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
                   placeholder="Pérez"
                   required
                   disabled={isLoading}
@@ -249,7 +249,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
                   type="number"
                   value={formData.age}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
                   placeholder="25"
                   required
                   min="13"
@@ -270,7 +270,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
                   type="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
                   placeholder="tu@email.com"
                   required
                   disabled={isLoading}
@@ -289,7 +289,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
                     type={showPassword ? "text" : "password"}
                     value={formData.password}
                     onChange={handleChange}
-                    className="w-full px-4 py-2.5 pr-12 bg-gray-800/50 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-2.5 pr-12 bg-gray-800/50 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
                     placeholder="••••••••"
                     required
                     minLength={6}
@@ -298,7 +298,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 rounded p-1 disabled:opacity-50"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 rounded p-1 disabled:opacity-50"
                     aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                     disabled={isLoading}
                   >
@@ -324,7 +324,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
                     type={showConfirmPassword ? "text" : "password"}
                     value={formData.confirmPassword}
                     onChange={handleChange}
-                    className="w-full px-4 py-2.5 pr-12 bg-gray-800/50 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-2.5 pr-12 bg-gray-800/50 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
                     placeholder="••••••••"
                     required
                     disabled={isLoading}
@@ -332,7 +332,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 rounded p-1 disabled:opacity-50"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 rounded p-1 disabled:opacity-50"
                     aria-label={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                     disabled={isLoading}
                   >
