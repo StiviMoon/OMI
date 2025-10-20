@@ -163,7 +163,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
       
       {/* Modal */}
       <div className="relative z-10 w-full max-w-md mx-auto max-h-[90vh] overflow-y-auto">
-        <div className="bg-gray-900/95 backdrop-blur-md rounded-lg shadow-2xl border border-gray-800 my-4">
+        <div className="bg-slate-900 backdrop-blur-md rounded-lg shadow-2xl border border-gray-800 my-4">
           {/* Close Button */}
           <button
             onClick={onClose}
@@ -187,7 +187,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
 
             {/* Title */}
             <h2 className="text-2xl font-bold text-white text-center mb-2">
-              CREAR CUENTA
+              Crear cuenta
             </h2>
             <p className="text-gray-400 text-center text-sm mb-5">
               Únete y disfruta del mejor contenido
@@ -352,15 +352,15 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
                   type="checkbox"
                   required
                   disabled={isLoading}
-                  className="mt-1 w-4 h-4 rounded border-gray-700 bg-gray-800 text-green-500 focus:ring-2 focus:ring-green-500"
+                  className="mt-1 w-4 h-4 rounded border-gray-700 bg-gray-800 text-cyan-500 focus:ring-2 focus:ring-cyan-500"
                 />
                 <label htmlFor="terms" className="text-xs text-gray-400">
                   Acepto los{' '}
-                  <Link href="/terms" className="text-green-500 hover:text-green-400 underline">
+                  <Link href="/terms" className="text-cyan-500 hover:text-cyan-400 underline">
                     términos y condiciones
                   </Link>
                   {' '}y la{' '}
-                  <Link href="/privacy" className="text-green-500 hover:text-green-400 underline">
+                  <Link href="/privacy" className="text-cyan-500 hover:text-cyan-400 underline">
                     política de privacidad
                   </Link>
                 </label>
@@ -372,7 +372,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
                 disabled={isLoading}
                 className="w-full bg-gradient-to-r from-green-600 to-cyan-600 hover:from-green-700 hover:to-cyan-700 text-white font-semibold py-2.5 rounded-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'CREANDO CUENTA...' : 'CREAR CUENTA'}
+                {isLoading ? 'Creando cuenta...' : 'Crear cuenta'}
               </Button>
             </form>
 
