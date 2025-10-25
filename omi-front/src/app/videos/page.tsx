@@ -53,10 +53,10 @@ export default function Page() {
 
   const { featured, loading: loadingFeatured } = useFeaturedVideo();
 
-  // Handler para agregar a lista
-  const handleAddToList = (id: string) => {
-    console.log('Video added to list:', id);
-  };
+  // ❌ ELIMINAR - Ya no es necesario
+  // const handleAddToList = (id: string) => {
+  //   console.log('Video added to list:', id);
+  // };
 
   const handleHeroPlay = () => {
     setFeaturedModalOpen(true);
@@ -112,7 +112,6 @@ export default function Page() {
               <ContentSection
                 title="Videos Populares"
                 movies={popularVideos}
-                onAddToList={handleAddToList}
               />
             ) : null}
 
@@ -123,7 +122,6 @@ export default function Page() {
               <ContentSection
                 title="Naturaleza"
                 movies={natureVideos}
-                onAddToList={handleAddToList}
               />
             ) : null}
 
@@ -134,7 +132,6 @@ export default function Page() {
               <ContentSection
                 title="Ciudad"
                 movies={cityVideos}
-                onAddToList={handleAddToList}
               />
             ) : null}
 
@@ -145,7 +142,6 @@ export default function Page() {
               <ContentSection
                 title="Tecnología"
                 movies={technologyVideos}
-                onAddToList={handleAddToList}
               />
             ) : null}
 
@@ -166,7 +162,7 @@ export default function Page() {
         </div>
       </main>
 
-      {/* Modal para el video destacado */}
+      {/* ✅ Modal para el video destacado - SIN onAddToList */}
       {featured && featuredModalOpen && (
         <VideoModal
           isOpen={featuredModalOpen}
@@ -177,17 +173,15 @@ export default function Page() {
             videoUrl: featured.videoUrl || '',
             posterUrl: featured.backdropUrl,
           }}
-          onAddToList={handleAddToList}
         />
       )}
 
-      {/* Modal para videos seleccionados desde búsqueda */}
+      {/* ✅ Modal para videos seleccionados desde búsqueda - SIN onAddToList */}
       {selectedVideo && (
         <VideoModal
           isOpen={!!selectedVideo}
           onClose={() => setSelectedVideo(null)}
           video={selectedVideo}
-          onAddToList={handleAddToList}
         />
       )}
     </div>

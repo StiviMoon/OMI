@@ -15,6 +15,22 @@ interface RegisterModalProps {
   onOpenLogin?: () => void;
 }
 
+// Componente de indicador de requisito
+const PasswordRequirement = ({ met, text }: { met: boolean; text: string }) => (
+  <div className="flex items-center gap-2 text-xs">
+    <div className={`w-4 h-4 rounded-full flex items-center justify-center transition-colors ${
+      met ? 'bg-green-500' : 'bg-gray-700'
+    }`}>
+      {met && (
+        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+        </svg>
+      )}
+    </div>
+    <span className={met ? 'text-green-400' : 'text-gray-500'}>{text}</span>
+  </div>
+);
+
 export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onOpenLogin }) => {
   const router = useRouter();
   const { login } = useAuthContext();
@@ -31,6 +47,14 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState({
+    hasMinLength: false,
+    hasUpperCase: false,
+    hasLowerCase: false,
+    hasNumber: false,
+    hasSymbol: false,
+    isValid: false
+  });
 
   useEffect(() => {
     setMounted(true);
@@ -62,8 +86,32 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
       setError('');
       setShowPassword(false);
       setShowConfirmPassword(false);
+      setPasswordStrength({
+        hasMinLength: false,
+        hasUpperCase: false,
+        hasLowerCase: false,
+        hasNumber: false,
+        hasSymbol: false,
+        isValid: false
+      });
     }
   }, [isOpen]);
+
+  // Función para validar la contraseña
+  const validatePassword = (password: string) => {
+    const checks = {
+      hasMinLength: password.length >= 8,
+      hasUpperCase: /[A-Z]/.test(password),
+      hasLowerCase: /[a-z]/.test(password),
+      hasNumber: /[0-9]/.test(password),
+      hasSymbol: /[!@#$%^&*(),.?":{}|<>_\-+=[\]\\/'`~]/.test(password),
+      isValid: false
+    };
+    
+    checks.isValid = checks.hasMinLength && checks.hasUpperCase && checks.hasLowerCase && checks.hasNumber && checks.hasSymbol;
+    
+    return checks;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,9 +123,10 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
       return;
     }
 
-    // Validar longitud mínima de contraseña
-    if (formData.password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres');
+    // Validar requisitos de contraseña
+    const passwordValidation = validatePassword(formData.password);
+    if (!passwordValidation.isValid) {
+      setError('La contraseña no cumple con todos los requisitos de seguridad');
       return;
     }
 
@@ -127,10 +176,17 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: value
     });
+    
+    // Validar contraseña en tiempo real
+    if (name === 'password') {
+      setPasswordStrength(validatePassword(value));
+    }
   };
   
   const handleLoginClick = () => {
@@ -161,8 +217,11 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
         onClick={onClose}
       />
       
-      {/* Modal */}
-      <div className="relative z-10 w-full max-w-md mx-auto max-h-[90vh] overflow-y-auto">
+      {/* Modal - Ancho aumentado */}
+      <div className="relative z-10 w-full max-w-2xl mx-auto max-h-[90vh] overflow-y-auto scrollbar-hide" style={{
+        scrollbarWidth: 'none',
+        msOverflowStyle: 'none'
+      }}>
         <div className="bg-gray-900/95 backdrop-blur-md rounded-lg shadow-2xl border border-gray-800 my-4">
           {/* Close Button */}
           <button
@@ -202,165 +261,185 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
                 </div>
               )}
 
-              {/* First Name Input */}
-              <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-gray-300 mb-1.5">
-                  Nombre
-                </label>
-                <input
-                  id="firstName"
-                  name="firstName"
-                  type="text"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                  placeholder="Juan"
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-
-              {/* Last Name Input */}
-              <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-gray-300 mb-1.5">
-                  Apellido
-                </label>
-                <input
-                  id="lastName"
-                  name="lastName"
-                  type="text"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                  placeholder="Pérez"
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-
-              {/* Age Input */}
-              <div>
-                <label htmlFor="age" className="block text-sm font-medium text-gray-300 mb-1.5">
-                  Edad
-                </label>
-                <input
-                  id="age"
-                  name="age"
-                  type="number"
-                  value={formData.age}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                  placeholder="25"
-                  required
-                  min="13"
-                  max="120"
-                  disabled={isLoading}
-                />
-                <p className="text-xs text-gray-500 mt-1">Debes tener al menos 13 años</p>
-              </div>
-
-              {/* Email Input */}
-              <div>
-                <label htmlFor="register-email" className="block text-sm font-medium text-gray-300 mb-1.5">
-                  Correo electrónico
-                </label>
-                <input
-                  id="register-email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                  placeholder="tu@email.com"
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-
-              {/* Password Input */}
-              <div>
-                <label htmlFor="register-password" className="block text-sm font-medium text-gray-300 mb-1.5">
-                  Contraseña
-                </label>
-                <div className="relative">
+              {/* Nombre y Apellido en 2 columnas */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* First Name Input */}
+                <div>
+                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-300 mb-1.5">
+                    Nombre
+                  </label>
                   <input
-                    id="register-password"
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    value={formData.password}
+                    id="firstName"
+                    name="firstName"
+                    type="text"
+                    value={formData.firstName}
                     onChange={handleChange}
-                    className="w-full px-4 py-2.5 pr-12 bg-gray-800/50 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                    placeholder="••••••••"
+                    className="w-full px-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                    placeholder="Juan"
                     required
-                    minLength={6}
                     disabled={isLoading}
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 rounded p-1 disabled:opacity-50"
-                    aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-                    disabled={isLoading}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="w-5 h-5" />
-                    ) : (
-                      <Eye className="w-5 h-5" />
-                    )}
-                  </button>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">Mínimo 6 caracteres</p>
-              </div>
 
-              {/* Confirm Password Input */}
-              <div>
-                <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-300 mb-1.5">
-                  Confirmar contraseña
-                </label>
-                <div className="relative">
+                {/* Last Name Input */}
+                <div>
+                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-300 mb-1.5">
+                    Apellido
+                  </label>
                   <input
-                    id="confirm-password"
-                    name="confirmPassword"
-                    type={showConfirmPassword ? "text" : "password"}
-                    value={formData.confirmPassword}
+                    id="lastName"
+                    name="lastName"
+                    type="text"
+                    value={formData.lastName}
                     onChange={handleChange}
-                    className="w-full px-4 py-2.5 pr-12 bg-gray-800/50 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                    placeholder="••••••••"
+                    className="w-full px-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                    placeholder="Pérez"
                     required
                     disabled={isLoading}
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 rounded p-1 disabled:opacity-50"
-                    aria-label={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                </div>
+              </div>
+
+              {/* Email y Edad en 2 columnas */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* Email Input */}
+                <div>
+                  <label htmlFor="register-email" className="block text-sm font-medium text-gray-300 mb-1.5">
+                    Correo electrónico
+                  </label>
+                  <input
+                    id="register-email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                    placeholder="tu@email.com"
+                    required
                     disabled={isLoading}
-                  >
-                    {showConfirmPassword ? (
-                      <EyeOff className="w-5 h-5" />
-                    ) : (
-                      <Eye className="w-5 h-5" />
-                    )}
-                  </button>
+                  />
+                </div>
+
+                {/* Age Input */}
+                <div>
+                  <label htmlFor="age" className="block text-sm font-medium text-gray-300 mb-1.5">
+                    Edad
+                  </label>
+                  <input
+                    id="age"
+                    name="age"
+                    type="number"
+                    value={formData.age}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                    placeholder="25"
+                    required
+                    min="13"
+                    max="120"
+                    disabled={isLoading}
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 -mt-1">Debes tener al menos 13 años</p>
+
+              {/* Contraseña y Confirmar contraseña en 2 columnas */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* Password Input */}
+                <div>
+                  <label htmlFor="register-password" className="block text-sm font-medium text-gray-300 mb-1.5">
+                    Contraseña
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="register-password"
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      value={formData.password}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2.5 pr-12 bg-gray-800/50 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                      placeholder="••••••••"
+                      required
+                      minLength={8}
+                      disabled={isLoading}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 rounded p-1 disabled:opacity-50"
+                      aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                      disabled={isLoading}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Confirm Password Input */}
+                <div>
+                  <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-300 mb-1.5">
+                    Confirmar contraseña
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="confirm-password"
+                      name="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2.5 pr-12 bg-gray-800/50 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                      placeholder="••••••••"
+                      required
+                      disabled={isLoading}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 rounded p-1 disabled:opacity-50"
+                      aria-label={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                      disabled={isLoading}
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Password Requirements - En 2 columnas */}
+              <div className="p-3 bg-gray-800/30 rounded-md border border-gray-700/50">
+                <p className="text-xs font-medium text-gray-300 mb-2">La contraseña debe contener:</p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+                  <PasswordRequirement met={passwordStrength.hasMinLength} text="Mínimo 8 caracteres" />
+                  <PasswordRequirement met={passwordStrength.hasUpperCase} text="Una letra mayúscula" />
+                  <PasswordRequirement met={passwordStrength.hasLowerCase} text="Una letra minúscula" />
+                  <PasswordRequirement met={passwordStrength.hasNumber} text="Un número (0-9)" />
+                  <PasswordRequirement met={passwordStrength.hasSymbol} text="Un símbolo (!@#$%^&*)" />
                 </div>
               </div>
 
               {/* Terms and Conditions */}
-              <div className="flex items-start gap-2 pt-1">
+              <div className="flex items-center justify-center gap-2 pt-1">
                 <input
                   id="terms"
                   type="checkbox"
                   required
                   disabled={isLoading}
-                  className="mt-1 w-4 h-4 rounded border-gray-700 bg-gray-800 text-green-500 focus:ring-2 focus:ring-green-500"
+                  className="mt-1 w-4 h-4 rounded border-gray-700 bg-gray-800 text-green-500 focus:ring-2 focus:ring-cyan-500"
                 />
                 <label htmlFor="terms" className="text-xs text-gray-400">
                   Acepto los{' '}
-                  <Link href="/terms" className="text-green-500 hover:text-green-400 underline">
+                  <Link href="/terms" className="text-cyan-500 hover:text-cyan-400 underline">
                     términos y condiciones
                   </Link>
                   {' '}y la{' '}
-                  <Link href="/privacy" className="text-green-500 hover:text-green-400 underline">
+                  <Link href="/privacy" className="text-cyan-500 hover:text-cyan-400 underline">
                     política de privacidad
                   </Link>
                 </label>

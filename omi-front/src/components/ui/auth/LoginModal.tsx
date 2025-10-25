@@ -235,7 +235,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 ¿No tienes cuenta?{' '}
                 <button 
                   onClick={handleRegisterClick}
-                  className="text-green-500 hover:text-green-400 font-semibold transition-colors disabled:opacity-50"
+                  className="text-cyan-500 hover:text-cyan-400 font-semibold transition-colors disabled:opacity-50"
                   type="button"
                   disabled={isLoading}
                 >

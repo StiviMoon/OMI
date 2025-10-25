@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { VideoModal } from './VideoModal';
 import Image from 'next/image';
+import { toggleFavorite, isFavorite } from '@/lib/favorites';
 
 interface MovieCardProps {
   id: string;
@@ -22,8 +23,6 @@ interface MovieCardProps {
   height?: number;
   year?: number;
   rating?: number;
-  onAddToList?: (id: string) => void;
-  isInList?: boolean;
   isPreview?: boolean;
 }
 
@@ -38,28 +37,60 @@ export const MovieCard: React.FC<MovieCardProps> = ({
   width,
   height,
   year,
-  onAddToList,
-  isInList = false,
   isPreview = false
 }) => {
   console.log('🎬 MovieCard Render:', { title, isPreview });
   const [isHovered, setIsHovered] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [isInFavorites, setIsInFavorites] = useState(false);
+  const [isLoadingFavorite, setIsLoadingFavorite] = useState(false);
 
   useEffect(() => {
     setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0);
   }, []);
+
+  // Verificar si está en favoritos al montar el componente
+  useEffect(() => {
+    const checkFavorite = async () => {
+      const inFavorites = await isFavorite(id);
+      setIsInFavorites(inFavorites);
+    };
+    checkFavorite();
+  }, [id]);
 
   const handlePlay = () => {
     if (isPreview) return;
     setIsModalOpen(true);
   };
 
-  const handleAddToList = (e: React.MouseEvent) => {
+  const handleToggleFavorite = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isPreview) return;
-    onAddToList?.(id);
+    if (isPreview || isLoadingFavorite) return;
+    
+    setIsLoadingFavorite(true);
+    try {
+      const videoData = {
+        id,
+        title,
+        posterUrl,
+        videoUrl,
+        duration,
+        tags,
+        user,
+        width,
+        height,
+      };
+      
+      const success = await toggleFavorite(videoData);
+      if (success) {
+        setIsInFavorites(!isInFavorites);
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+    } finally {
+      setIsLoadingFavorite(false);
+    }
   };
 
   const handleCardClick = () => {
@@ -74,6 +105,11 @@ export const MovieCard: React.FC<MovieCardProps> = ({
     } else {
       handlePlay();
     }
+  };
+
+  // Callback para actualizar favoritos cuando cambian en el modal
+  const handleFavoriteUpdate = (newState: boolean) => {
+    setIsInFavorites(newState);
   };
 
   return (
@@ -137,13 +173,20 @@ export const MovieCard: React.FC<MovieCardProps> = ({
                     <Button 
                       size="icon" 
                       variant="secondary"
-                      className="
-                        bg-gray-800/80 hover:bg-gray-700
+                      className={`
                         h-7 w-7 sm:h-8 sm:w-8
-                      "
-                      onClick={handleAddToList}
+                        transition-colors
+                        ${isInFavorites 
+                          ? 'bg-cyan-500 hover:bg-cyan-600' 
+                          : 'bg-gray-800/80 hover:bg-gray-700'
+                        }
+                      `}
+                      onClick={handleToggleFavorite}
+                      disabled={isLoadingFavorite}
                     >
-                      {isInList ? (
+                      {isLoadingFavorite ? (
+                        <div className="h-3 w-3 sm:h-4 sm:w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : isInFavorites ? (
                         <Check className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
                       ) : (
                         <Plus className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
@@ -173,8 +216,7 @@ export const MovieCard: React.FC<MovieCardProps> = ({
             width,
             height,
           }}
-          onAddToList={onAddToList}
-          isInList={isInList}
+          onFavoriteUpdate={handleFavoriteUpdate}
         />
       )}
     </>
