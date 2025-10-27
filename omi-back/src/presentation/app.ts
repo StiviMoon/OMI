@@ -118,9 +118,19 @@ export class App {
   }
 
   private setupMiddleware(): void {
+    const allowedOrigins = config.nodeEnv === 'production'
+      ? [
+          'https://omi-front.vercel.app',
+          /^https:\/\/.*\.vercel\.app$/,
+          'http://localhost:3000'
+        ]
+      : config.cors.origin;
+
     this.app.use(cors({
-      origin: config.cors.origin,
-      credentials: true
+      origin: allowedOrigins,
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
     }));
     this.app.use(express.json());
   }
