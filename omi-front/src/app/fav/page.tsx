@@ -33,10 +33,13 @@ export default function FavoritesPage() {
   const loadFavorites = async () => {
     setLoading(true);
     try {
+      console.log('🔄 Loading favorites...');
       const loadedFavorites = await getAllFavorites();
+      console.log('✅ Loaded favorites:', loadedFavorites.length);
+      console.log('📋 Favorites data:', loadedFavorites);
       setFavorites(loadedFavorites);
     } catch (error) {
-      console.error('Error loading favorites:', error);
+      console.error('❌ Error loading favorites:', error);
       setFavorites([]);
     } finally {
       setLoading(false);

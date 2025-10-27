@@ -21,13 +21,16 @@ export class FavoritesController {
         return;
       }
 
+      console.log('📋 Listing favorites for userId:', userId);
       const favorites = await this.listFavoritesUseCase.execute(userId);
+      console.log('✅ Found favorites:', favorites.length);
       
       res.status(200).json({
         message: 'Favorites retrieved successfully',
         data: favorites.map(fav => fav.toJSON()),
       });
     } catch (error) {
+      console.error('❌ Error in favorites.list:', error);
       const message = error instanceof Error ? error.message : 'Unknown error occurred';
       res.status(500).json({ error: message });
     }

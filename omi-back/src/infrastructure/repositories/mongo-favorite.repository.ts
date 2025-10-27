@@ -6,6 +6,10 @@ import { ObjectId } from 'mongodb';
 export class MongoFavoriteRepository implements IFavoriteRepository {
   private collection = DatabaseConnection.getInstance().getCollection<Favorite>('favorites');
 
+  constructor() {
+    console.log('✅ MongoFavoriteRepository using collection: favorites');
+  }
+
   async addFavorite(userId: string, pexelsId: string, mediaType: 'photo' | 'video', metadata?: Record<string, unknown>): Promise<Favorite> {
     const favorite = new Favorite(new ObjectId().toString(), userId, pexelsId, mediaType, new Date(), metadata);
     await this.collection.insertOne(favorite);
@@ -18,8 +22,17 @@ export class MongoFavoriteRepository implements IFavoriteRepository {
   }
 
   async getUserFavorites(userId: string): Promise<Favorite[]> {
+    console.log('🔍 Querying favorites collection for userId:', userId);
     const results = await this.collection.find({ userId }).toArray();
-    return results as unknown as Favorite[];
+    console.log(`📊 Found ${results.length} documents in favorites collection`);
+    return results.map(doc => new Favorite(
+      doc._id.toString(),
+      doc.userId,
+      doc.pexelsId,
+      doc.mediaType,
+      doc.createdAt,
+      doc.metadata
+    ));
   }
 
 
