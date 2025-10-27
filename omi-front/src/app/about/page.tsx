@@ -1,9 +1,8 @@
 'use client';
 
-import React from 'react';
 import { Film, Star, Play, HandHelping, Tags } from 'lucide-react';
 import Image from 'next/image';
-import { Sidebar } from '@/components/ui/sidebar/sidebar';
+import { Header } from '@/components/ui/header/Header';
 
 interface Feature {
   icon: React.ReactNode;
@@ -11,40 +10,49 @@ interface Feature {
   description: string;
 }
 
-const AboutPage: React.FC = () => {
-  const features: Feature[] = [
-    {
-      icon: <Film className="w-6 h-6" />,
-      title: "Catálogo Extenso",
-      description: "Miles de películas de todos los géneros y épocas"
-    },
-    {
-      icon: <Star className="w-6 h-6" />,
-      title: "Recomendaciones Personalizadas",
-      description: "Descubre contenido adaptado a tus gustos"
-    },
-    {
-      icon: <Play className="w-6 h-6" />,
-      title: "Streaming de Calidad",
-      description: "Disfruta de video en HD y 4K sin interrupciones"
-    }
-  ];
+interface TeamMember {
+  role: string;
+  name: string;
+}
 
+const features: Feature[] = [
+  {
+    icon: <Film className="w-6 h-6" />,
+    title: 'Catálogo Extenso',
+    description: 'Miles de películas de todos los géneros y épocas'
+  },
+  {
+    icon: <Star className="w-6 h-6" />,
+    title: 'Recomendaciones Personalizadas',
+    description: 'Descubre contenido adaptado a tus gustos'
+  },
+  {
+    icon: <Play className="w-6 h-6" />,
+    title: 'Streaming de Calidad',
+    description: 'Disfruta de video en HD y 4K sin interrupciones'
+  }
+];
+
+const teamMembers: TeamMember[] = [
+  { role: 'Backend Developer', name: 'Johan Steven Rodriguez Lopez' },
+  { role: 'Frontend Developer', name: 'Daniel Alexander Ramirez Maigual' },
+  { role: 'Tester', name: 'Alejandro Rubianes Realpe' },
+  { role: 'Database Admin', name: 'Carlos Daniel Salinas' },
+  { role: 'Project Manager', name: 'Axel David Rubianes' }
+];
+
+export default function AboutPage() {
   return (
-    <div className="flex min-h-screen bg-gradient-to-b from-gray-900 to-black">
-      {/* Sidebar */}
-      <Sidebar />
-
-      {/* Main Content - con margen para el sidebar */}
-      <main className="flex-1 md:ml-[80px] lg:ml-[160px]">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-grey-200 via-grey-200 to-grey-400 px-6 py-8">
+    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black">
+      <Header onOpenLogin={() => {}} />
+      
+      <main className="w-full pt-20">
+        <div className="bg-gradient-to-r from-gray-800 via-gray-700 to-gray-900 px-6 py-8">
           <div className="max-w-5xl mx-auto">
             <h1 className="text-3xl font-bold text-white">Sobre Nosotros</h1>
           </div>
         </div>
 
-        {/* Content */}
         <div className="max-w-5xl mx-auto p-6 space-y-8">
           {/* Hero Section */}
           <div className="text-center py-8">
@@ -107,12 +115,8 @@ const AboutPage: React.FC = () => {
                       {feature.icon}
                     </div>
                     <div>
-                      <h3 className="font-semibold text-white mb-1">
-                        {feature.title}
-                      </h3>
-                      <p className="text-sm text-gray-400">
-                        {feature.description}
-                      </p>
+                      <h3 className="font-semibold text-white mb-1">{feature.title}</h3>
+                      <p className="text-sm text-gray-400">{feature.description}</p>
                     </div>
                   </div>
                 </div>
@@ -123,74 +127,30 @@ const AboutPage: React.FC = () => {
           {/* Version Section */}
           <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-lg p-6 border border-gray-700 flex justify-center items-center">
             <div className="text-center">
-              <div>
-                <Tags className="w-8 h-8 text-blue-400 mx-auto mb-2" />
-              </div>
+              <Tags className="w-8 h-8 text-blue-400 mx-auto mb-2" />
               <h3 className="text-white font-semibold mb-1">Version</h3>
               <p className="text-gray-400 text-sm">V.1.0.0</p>
             </div>
           </div>
 
-        <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-lg p-6 border border-gray-700 flex justify-center">
-            <div className="text-center">
-              
-              <h3 className="text-white font-semibold mb-1">Integrantes</h3>
-              
+          {/* Team Section */}
+          <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-lg p-6 border border-gray-700 flex justify-center">
+            <div className="text-center w-full">
+              <h3 className="text-white font-semibold mb-4">Integrantes</h3>
               <div className="flex flex-wrap justify-center gap-3">
-                <div className="card" data-text="Backend Developer">
-                    <div className="first-content">
-                        
-                    </div>
-                    <div className="second-content text-black-400 w-20 h-auto justify-center items-center ">
-                        <span>Johan Steven Rodriguez Lopez</span>
-                    </div>
-
-                </div>
-                <div className="card" data-text="Frontend Developer">
-                    <div className="first-content ">    
-                    </div>
+                {teamMembers.map((member, index) => (
+                  <div key={index} className="card" data-text={member.role}>
+                    <div className="first-content" />
                     <div className="second-content text-black-400 w-20 h-auto flex justify-center items-center">
-                        <span>Daniel Alexander Ramirez Maigual</span>
+                      <span>{member.name}</span>
                     </div>
-                    
-                </div>
-                <div className="card" data-text="Tester">
-                    <div className="first-content">
-                        
-                    </div>
-                    <div className="second-content text-black-400 w-20 h-auto flex justify-center items-center">
-                        <span>Alejandro Rubianes Realpe</span>
-                    </div>
-                    
-                </div>
-                <div className="card" data-text="Database Admin">
-                    <div className="first-content">
-                        
-                    </div>
-                    <div className="second-content text-black-400 w-20 h-auto flex justify-center items-center">
-                        <span>Carlos Daniel Salinas</span>
-                    </div>
-                    
-                </div>
-                <div className="card" data-text="Project Manager">
-                    <div className="first-content">
-                        
-                    </div>
-                    <div className="second-content text-black-400 w-20 h-auto flex justify-center items-center">
-                        <span>Axel David Rubianes</span>
-                    </div>
-                    
-                </div>
+                  </div>
+                ))}
               </div>
             </div>
+          </div>
         </div>
-    </div>
-
-        
-       
       </main>
     </div>
   );
-};
-
-export default AboutPage;
+}

@@ -19,10 +19,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onVideoSelect }) => {
 
   // Determinar el item activo basado en la ruta actual
   const getActiveItem = useCallback(() => {
-    if (pathname === '/about') return 'Sobre Nosotros';
     if (pathname === '/videos') return 'PELICULA';
     if (pathname === '/historial') return 'HISTORIAL';
-    
     if (pathname === '/fav') return 'FAVORITOS';
     return 'PELICULA'; // Default
   }, [pathname]);
@@ -59,13 +57,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onVideoSelect }) => {
       case 'PELICULA':
         router.push('/videos');
         break;
-      case 'Sobre Nosotros':
-        router.push('/about');
-        break;
       case 'FAVORITOS':
-        router.push('/fav'); // Descomentar cuando tengas la ruta
+        router.push('/fav');
         break;
-      
       case 'HISTORIAL':
         // router.push('/historial'); // Descomentar cuando tengas la ruta
         break;
@@ -82,7 +76,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onVideoSelect }) => {
   ];
 
   const bottomItems = [
-    { icon: <HandHeart className="w-5 h-5" />, label: 'Sobre Nosotros' },
     { icon: <History className="w-5 h-5" />, label: 'HISTORIAL' },
     { icon: <User className="w-5 h-5" />, label: 'CUENTA' },
   ];

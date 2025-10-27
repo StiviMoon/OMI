@@ -35,7 +35,7 @@ export class FavoritesController {
 
   async add(req: Request, res: Response): Promise<void> {
     try {
-      const { userId, pexelsId, mediaType } = req.body;
+      const { userId, pexelsId, mediaType, metadata } = req.body;
 
       if (!userId || !pexelsId || !mediaType) {
         res.status(400).json({ error: 'User ID, Pexels ID, and media type are required' });
@@ -47,7 +47,7 @@ export class FavoritesController {
         return;
       }
 
-      const favorite = await this.addFavoriteUseCase.execute(userId, pexelsId, mediaType);
+      const favorite = await this.addFavoriteUseCase.execute(userId, pexelsId, mediaType, metadata);
       
       res.status(201).json({
         message: 'Favorite added successfully',

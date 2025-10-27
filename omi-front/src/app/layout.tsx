@@ -1,48 +1,48 @@
 'use client';
 
-import { Geist, Geist_Mono } from "next/font/google";
 import { useState } from 'react';
-import "./globals.css";
+import { Geist, Geist_Mono } from 'next/font/google';
+import './globals.css';
 import { Footer } from '@/components/footer/Footer';
 import ModalCuenta from '@/components/ui/Cuenta/ModalCuenta';
-import { SearchModal } from "@/components/ui/sidebar/SearchModal";
+import { SearchModal } from '@/components/ui/sidebar/SearchModal';
 import { AuthProvider } from '@/lib/context/AuthContext';
 
-
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
 });
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   const [isCuentaModalOpen, setIsCuentaModalOpen] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+
+  const handleOpenAccountModal = () => setIsCuentaModalOpen(true);
+  const handleCloseAccountModal = () => setIsCuentaModalOpen(false);
+  const handleOpenSearchModal = () => setIsSearchModalOpen(true);
+  const handleCloseSearchModal = () => setIsSearchModalOpen(false);
+
   return (
     <html lang="es">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <AuthProvider>
           {children}
-          <Footer onOpenAccountModal={() => setIsCuentaModalOpen(true)}
-          onOpenSearchModal={()=> setIsSearchModalOpen(true)} />
-          
+          <Footer 
+            onOpenAccountModal={handleOpenAccountModal}
+            onOpenSearchModal={handleOpenSearchModal} 
+          />
           <ModalCuenta 
             isOpen={isCuentaModalOpen}
-            onClose={() => setIsCuentaModalOpen(false)}
+            onClose={handleCloseAccountModal}
           />
           <SearchModal 
             isOpen={isSearchModalOpen}
-            onClose={() => setIsSearchModalOpen(false)}
+            onClose={handleCloseSearchModal}
           />
         </AuthProvider>
       </body>

@@ -4,7 +4,8 @@ export class Favorite {
     public readonly userId: string,
     public readonly pexelsId: string,
     public readonly mediaType: 'photo' | 'video',
-    public readonly createdAt: Date
+    public readonly createdAt: Date,
+    public readonly metadata?: Record<string, unknown>
   ) {}
 
   toJSON() {
@@ -14,6 +15,7 @@ export class Favorite {
       pexelsId: this.pexelsId,
       mediaType: this.mediaType,
       createdAt: this.createdAt,
+      metadata: this.metadata,
     };
   }
 }

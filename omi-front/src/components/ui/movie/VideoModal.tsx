@@ -22,14 +22,14 @@ interface VideoModalProps {
     width?: number;
     height?: number;
   };
-  onFavoriteUpdate?: (isInFavorites: boolean) => void; // 👈 NUEVA PROP AGREGADA
+  onFavoriteUpdate?: (isInFavorites: boolean) => void;
 }
 
 export const VideoModal: React.FC<VideoModalProps> = ({ 
   isOpen, 
   onClose, 
   video,
-  onFavoriteUpdate, // 👈 NUEVA PROP RECIBIDA
+  onFavoriteUpdate,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -44,7 +44,6 @@ export const VideoModal: React.FC<VideoModalProps> = ({
   const [isLoadingFavorite, setIsLoadingFavorite] = useState(false);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Verificar si el video está en favoritos cuando se abre el modal
   useEffect(() => {
     const checkFavorite = async () => {
       if (isOpen && video.id) {
@@ -55,7 +54,6 @@ export const VideoModal: React.FC<VideoModalProps> = ({
     checkFavorite();
   }, [isOpen, video.id]);
 
-  // Cerrar con ESC
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -72,7 +70,6 @@ export const VideoModal: React.FC<VideoModalProps> = ({
     };
   }, [isOpen, onClose]);
 
-  // Actualizar tiempo del video
   useEffect(() => {
     const videoEl = videoRef.current;
     if (!videoEl) return;
@@ -104,7 +101,6 @@ export const VideoModal: React.FC<VideoModalProps> = ({
     };
   }, [isOpen]);
 
-  // Auto-ocultar controles
   const handleMouseMove = () => {
     setShowControls(true);
     if (controlsTimeoutRef.current) {
@@ -115,7 +111,6 @@ export const VideoModal: React.FC<VideoModalProps> = ({
     }, 3000);
   };
 
-  // 🆕 Manejar favoritos - MODIFICADO
   const handleToggleFavorite = async () => {
     setIsLoadingFavorite(true);
     try {
@@ -123,7 +118,6 @@ export const VideoModal: React.FC<VideoModalProps> = ({
       if (success) {
         const newState = !isInFavorites;
         setIsInFavorites(newState);
-        // 👈 Notificar al componente padre (MovieCard) del cambio
         onFavoriteUpdate?.(newState);
       }
     } catch (error) {
@@ -133,7 +127,6 @@ export const VideoModal: React.FC<VideoModalProps> = ({
     }
   };
 
-  // Funciones de control
   const togglePlay = () => {
     const videoEl = videoRef.current;
     if (!videoEl) return;
@@ -206,21 +199,17 @@ export const VideoModal: React.FC<VideoModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Calcular progreso para CSS variables
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
   const volumePercent = (isMuted ? 0 : volume) * 100;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/80 backdrop-blur-sm"
         onClick={onClose}
       />
       
-      {/* Modal */}
       <div className="relative w-full max-w-6xl mx-4 bg-zinc-900 rounded-lg overflow-hidden shadow-2xl">
-        {/* Close button */}
         <Button
           variant="ghost"
           size="icon"
@@ -231,7 +220,6 @@ export const VideoModal: React.FC<VideoModalProps> = ({
         </Button>
 
         <div className="flex flex-col lg:flex-row max-h-[90vh]">
-          {/* Video Player Section */}
           <div className="lg:w-2/3 bg-black relative group" onMouseMove={handleMouseMove}>
             <div className="relative aspect-video">
               <video
@@ -245,7 +233,6 @@ export const VideoModal: React.FC<VideoModalProps> = ({
                 Tu navegador no soporta el elemento de video.
               </video>
 
-              {/* Subtítulos simulados */}
               {showSubtitles && (
                 <div className="absolute bottom-20 left-0 right-0 text-center">
                   <div className="inline-block bg-black/80 px-4 py-2 rounded text-white text-lg">
@@ -254,13 +241,11 @@ export const VideoModal: React.FC<VideoModalProps> = ({
                 </div>
               )}
 
-              {/* Controles personalizados */}
               <div 
                 className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4 transition-opacity duration-300 ${
                   showControls ? 'opacity-100' : 'opacity-0'
                 }`}
               >
-                {/* Barra de progreso */}
                 <input
                   type="range"
                   min="0"
@@ -275,9 +260,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({
                 />
 
                 <div className="flex items-center justify-between gap-2">
-                  {/* Controles izquierda */}
                   <div className="flex items-center gap-2">
-                    {/* Play/Pause */}
                     <Button
                       variant="ghost"
                       size="icon"
@@ -287,7 +270,6 @@ export const VideoModal: React.FC<VideoModalProps> = ({
                       {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
                     </Button>
 
-                    {/* Stop */}
                     <Button
                       variant="ghost"
                       size="icon"
@@ -298,15 +280,12 @@ export const VideoModal: React.FC<VideoModalProps> = ({
                       <Square className="h-5 w-5 fill-current" />
                     </Button>
 
-                    {/* Tiempo */}
                     <span className="text-white text-sm font-medium">
                       {formatTime(currentTime)} / {formatTime(duration)}
                     </span>
                   </div>
 
-                  {/* Controles derecha */}
                   <div className="flex items-center gap-2">
-                    {/* Subtítulos */}
                     <Button
                       variant="ghost"
                       size="icon"
@@ -319,7 +298,6 @@ export const VideoModal: React.FC<VideoModalProps> = ({
                       <Subtitles className="h-5 w-5" />
                     </Button>
 
-                    {/* Volumen */}
                     <div className="flex items-center gap-2 relative">
                       <Button
                         variant="ghost"
@@ -335,7 +313,6 @@ export const VideoModal: React.FC<VideoModalProps> = ({
                         )}
                       </Button>
 
-                      {/* Slider de volumen */}
                       {showVolumeSlider && (
                         <div 
                           className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-black/90 p-3 rounded-lg"
@@ -373,15 +350,12 @@ export const VideoModal: React.FC<VideoModalProps> = ({
             </div>
           </div>
 
-          {/* Info Section */}
           <div className="lg:w-1/3 bg-zinc-900 flex flex-col max-h-[90vh]">
             <div className="p-6 overflow-y-auto flex-1">
-              {/* Title */}
               <h2 className="text-2xl font-bold text-white mb-4">
                 {video.title}
               </h2>
 
-              {/* Action Buttons */}
               <div className="flex gap-3 mb-6">
                 <Button 
                   variant="outline"
@@ -410,7 +384,6 @@ export const VideoModal: React.FC<VideoModalProps> = ({
                 </Button>
               </div>
 
-              {/* Video Stats */}
               <div className="space-y-4 mb-6">
                 {video.duration && (
                   <div className="flex items-center gap-2">
@@ -445,7 +418,6 @@ export const VideoModal: React.FC<VideoModalProps> = ({
                 )}
               </div>
 
-              {/* Tags */}
               {video.tags && video.tags.length > 0 && (
                 <div className="space-y-2">
                   <h3 className="text-gray-400 text-sm font-semibold">Tags</h3>

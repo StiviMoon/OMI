@@ -6,8 +6,8 @@ import { ObjectId } from 'mongodb';
 export class MongoFavoriteRepository implements IFavoriteRepository {
   private collection = DatabaseConnection.getInstance().getCollection<Favorite>('favorites');
 
-  async addFavorite(userId: string, pexelsId: string, mediaType: 'photo' | 'video'): Promise<Favorite> {
-    const favorite = new Favorite(new ObjectId().toString(), userId, pexelsId, mediaType, new Date());
+  async addFavorite(userId: string, pexelsId: string, mediaType: 'photo' | 'video', metadata?: Record<string, unknown>): Promise<Favorite> {
+    const favorite = new Favorite(new ObjectId().toString(), userId, pexelsId, mediaType, new Date(), metadata);
     await this.collection.insertOne(favorite);
     return favorite;
   }

@@ -39,7 +39,6 @@ export const MovieCard: React.FC<MovieCardProps> = ({
   year,
   isPreview = false
 }) => {
-  console.log('🎬 MovieCard Render:', { title, isPreview });
   const [isHovered, setIsHovered] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
@@ -50,7 +49,6 @@ export const MovieCard: React.FC<MovieCardProps> = ({
     setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0);
   }, []);
 
-  // Verificar si está en favoritos al montar el componente
   useEffect(() => {
     const checkFavorite = async () => {
       const inFavorites = await isFavorite(id);
@@ -94,11 +92,7 @@ export const MovieCard: React.FC<MovieCardProps> = ({
   };
 
   const handleCardClick = () => {
-    console.log('🖱️ Card clicked, isPreview:', isPreview);
-    if (isPreview) {
-      console.log('⛔ Blocked by preview mode');
-      return;
-    }
+    if (isPreview) return;
     if (isTouchDevice && !isHovered) {
       setIsHovered(true);
       setTimeout(() => setIsHovered(false), 3000);
@@ -107,7 +101,6 @@ export const MovieCard: React.FC<MovieCardProps> = ({
     }
   };
 
-  // Callback para actualizar favoritos cuando cambian en el modal
   const handleFavoriteUpdate = (newState: boolean) => {
     setIsInFavorites(newState);
   };
@@ -200,7 +193,6 @@ export const MovieCard: React.FC<MovieCardProps> = ({
         </CardContent>
       </Card>
 
-      {/* Video Modal */}
       {!isPreview && (
         <VideoModal
           isOpen={isModalOpen}
