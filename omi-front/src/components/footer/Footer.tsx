@@ -15,8 +15,8 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAccountModal,onOpenSearchM
   const pathname = usePathname();
   const currentYear = new Date().getFullYear();
 
-  // Rutas que tienen sidebar
-  const routesWithSidebar = ['/videos', '/about', '/historial', '/fav'];
+  // Rutas que tienen sidebar (excluir /about porque usa header completo)
+  const routesWithSidebar = ['/videos', '/historial', '/fav'];
   const hasSidebar = routesWithSidebar.some(route => pathname.startsWith(route));
 
   return (

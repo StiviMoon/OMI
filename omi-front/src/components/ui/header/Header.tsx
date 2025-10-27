@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { Menu, X, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LoginModal } from '@/components/ui/auth/LoginModal';
@@ -8,7 +9,11 @@ import { RegisterModal } from '@/components/ui/auth/RegisterModal';
 import { ForgotPasswordModal } from '@/components/ui/auth/ForgotPasswordModal';
 import Image from 'next/image';
 
-export const Header: React.FC = () => {
+interface HeaderProps {
+  onOpenLogin?: () => void;
+}
+
+export const Header: React.FC<HeaderProps> = ({ onOpenLogin }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -16,8 +21,7 @@ export const Header: React.FC = () => {
   const [isForgotPasswordModalOpen, setIsForgotPasswordModalOpen] = useState(false); 
 
   return (
-    <header className="
-      fixed top-0 left-0 right-0 z-50 
+    <header className="fixed top-0 left-0 right-0 z-50 
       bg-black/40 backdrop-blur-md border-b border-gray-800/50
     ">
       <div className="flex items-center justify-between px-4 sm:px-8 lg:px-16 py-4">
@@ -33,11 +37,30 @@ export const Header: React.FC = () => {
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-6">
+          {/* Home Link */}
+          <Link 
+            href="/"
+            className="text-gray-300 hover:text-white transition-colors px-3 py-2 rounded-lg hover:bg-gray-800/50"
+          >
+            Inicio
+          </Link>
+
+          {/* About Link */}
+          <Link 
+            href="/about"
+            className="text-gray-300 hover:text-white transition-colors px-3 py-2 rounded-lg hover:bg-gray-800/50"
+          >
+            Sobre Nosotros
+          </Link>
+
           {/* Auth Buttons */}
           <Button
             variant="ghost"
             className="text-white border border-gray-700 hover:text-white hover:bg-transparent hover-underline-effect"
-            onClick={() => setIsLoginModalOpen(true)}
+            onClick={() => {
+              setIsLoginModalOpen(true);
+              onOpenLogin?.();
+            }}
           >
             Iniciar Sesión 
           </Button>
@@ -46,23 +69,14 @@ export const Header: React.FC = () => {
           <div className="relative">
             <button
               onClick={() => setIsLanguageOpen(!isLanguageOpen)}
-              className="
-                flex items-center gap-2 px-3 py-2 rounded-lg
-                text-gray-300 hover:text-white
-                hover:bg-gray-800/50
-                transition-all
-                text-sm
-              "
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-300 hover:text-white hover:bg-gray-800/50 transition-all text-sm"
             >
               <span>Español</span>
               <ChevronDown className="w-4 h-4" />
             </button>
 
             {isLanguageOpen && (
-              <div className="
-                absolute right-0 mt-2 w-40 bg-gray-900 border border-gray-700 rounded-lg
-                shadow-lg z-50
-              ">
+              <div className="absolute right-0 mt-2 w-40 bg-gray-900 border border-gray-700 rounded-lg shadow-lg z-50">
                 <button className="w-full text-left px-4 py-2 text-white hover:bg-gray-800 transition-colors rounded-t-lg">
                   Español
                 </button>
@@ -93,6 +107,24 @@ export const Header: React.FC = () => {
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div className="md:hidden bg-gray-900/95 backdrop-blur-sm border-b border-gray-800 p-4 space-y-4">
+          {/* Home Link Mobile */}
+          <Link 
+            href="/"
+            className="block text-gray-300 hover:text-white px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            Inicio
+          </Link>
+
+          {/* About Link Mobile */}
+          <Link 
+            href="/about"
+            className="block text-gray-300 hover:text-white px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            Sobre Nosotros
+          </Link>
+
           {/* Language Selector Mobile */}
           <div className="space-y-2">
             <p className="text-xs uppercase text-gray-500 font-semibold">Idioma</p>
