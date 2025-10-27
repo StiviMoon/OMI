@@ -30,10 +30,14 @@ export class PexelsService {
   private axiosInstance: AxiosInstance;
 
   constructor() {
+    if (!config.pexels.apiKey) {
+      console.error('⚠️  PEXELS_API_KEY is missing in environment variables');
+    }
+    
     this.axiosInstance = axios.create({
       baseURL: 'https://api.pexels.com',
       headers: {
-        Authorization: config.pexels.apiKey,
+        Authorization: config.pexels.apiKey || '',
       },
     });
   }
@@ -72,15 +76,19 @@ export class PexelsService {
    */
   async getPopularVideos(options: GetPopularVideosOptions = {}): Promise<PexelsPopularVideosResponse> {
     try {
+      if (!config.pexels.apiKey) {
+        throw new Error('Pexels API key is not configured');
+      }
+
       const params: Record<string, number> = {
         page: options.page || 1,
         per_page: options.perPage || 15,
       };
 
-      if (options.minWidth) params.min_width = options.minWidth;
-      if (options.minHeight) params.min_height = options.minHeight;
-      if (options.minDuration) params.min_duration = options.minDuration;
-      if (options.maxDuration) params.max_duration = options.maxDuration;
+      if (options.minWidth) params['min_width'] = options.minWidth;
+      if (options.minHeight) params['min_height'] = options.minHeight;
+      if (options.minDuration) params['min_duration'] = options.minDuration;
+      if (options.maxDuration) params['max_duration'] = options.maxDuration;
 
       const response = await this.axiosInstance.get<PexelsPopularVideosResponse>('/videos/popular', {
         params,
@@ -89,7 +97,13 @@ export class PexelsService {
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        throw new Error(`Pexels API error: ${error.response?.data?.error || error.message}`);
+        const errorMessage = error.response?.data?.error || error.message;
+        console.error('Pexels API Error:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: errorMessage,
+        });
+        throw new Error(`Pexels API error: ${errorMessage}`);
       }
       throw error;
     }
