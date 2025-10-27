@@ -1,11 +1,47 @@
 // Re-exportar tipos de autenticación
 export type { User } from './types/auth.types';
 
+// ✅ NUEVO: Tipos para window.storage
+export interface StorageResult {
+  key: string;
+  value: string;
+  shared: boolean;
+}
+
+export interface StorageListResult {
+  keys: string[];
+  prefix?: string;
+  shared: boolean;
+}
+
+export interface StorageDeleteResult {
+  key: string;
+  deleted: boolean;
+  shared: boolean;
+}
+
+export interface WindowStorage {
+  get(key: string, shared?: boolean): Promise<StorageResult | null>;
+  set(key: string, value: string, shared?: boolean): Promise<StorageResult | null>;
+  delete(key: string, shared?: boolean): Promise<StorageDeleteResult | null>;
+  list(prefix?: string, shared?: boolean): Promise<StorageListResult | null>;
+}
+
+// ✅ NUEVO: Extender Window
+declare global {
+  interface Window {
+    storage: WindowStorage;
+    fs?: {
+      readFile(path: string, options?: { encoding?: string }): Promise<Uint8Array | string>;
+    };
+  }
+}
+
 export interface Movie {
   id: string;
   title: string;
   posterUrl: string;
-  videoUrl: string;        // ✅ Ahora es requerido (sin ?)
+  videoUrl: string;
   duration?: number;
   tags?: string[];
   user?: {
@@ -18,6 +54,11 @@ export interface Movie {
   rating?: number;
 }
 
+// ✅ NUEVO: Tipo para favoritos
+export interface FavoriteVideo extends Movie {
+  addedAt: number;
+}
+
 export interface SidebarItemProps {
   icon: React.ReactNode;
   label: string;
@@ -25,7 +66,6 @@ export interface SidebarItemProps {
   onClick?: () => void;
 }
 
-// ✅ Actualizado: MovieCardProps sin onPlay
 export interface MovieCardProps {
   id: string;
   title: string;
@@ -45,7 +85,6 @@ export interface MovieCardProps {
   isInList?: boolean;
 }
 
-// ✅ Actualizado: ContentSectionProps sin onPlay
 export interface ContentSectionProps {
   title: string;
   movies: Movie[];
@@ -60,7 +99,6 @@ export interface HeroBannerProps {
   onMoreInfo: () => void;
 }
 
-// Tipos para los parámetros de búsqueda
 export interface SearchParams {
   query: string;
   page?: number;

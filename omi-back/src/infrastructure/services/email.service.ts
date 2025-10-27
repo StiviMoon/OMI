@@ -24,25 +24,25 @@ export class EmailService implements IEmailService {
     const resetUrl = `${config.email.resetPasswordUrl}?token=${resetToken}`;
     const isDevelopment = config.nodeEnv === 'development';
     
-    // Detectar si estamos usando el email de onboarding de Resend
+    // Detect if we're using Resend's onboarding email
     const isUsingResendOnboarding = config.email.fromEmail === 'onboarding@resend.dev';
     
-    // Si usamos onboarding@resend.dev, SIEMPRE enviamos al DEV_EMAIL (producción o desarrollo)
-    // porque Resend solo permite enviar a emails verificados sin dominio propio
+    // If using onboarding@resend.dev, ALWAYS send to DEV_EMAIL (production or development)
+    // because Resend only allows sending to verified emails without custom domain
     const emailTo = isUsingResendOnboarding ? config.email.devEmail : email;
     
     const emailSubject = isUsingResendOnboarding 
-      ? `${isDevelopment ? '[DEV]' : '[PROD]'} Recuperar Contraseña - Usuario: ${email}`
-      : 'Recuperación de Contraseña - OMI';
+      ? `${isDevelopment ? '[DEV]' : '[PROD]'} Password Recovery - User: ${email}`
+      : 'Password Recovery - OMI';
 
-    // Log para debugging (en desarrollo Y en producción si usamos onboarding)
+    // Log for debugging (in development AND production if using onboarding)
     if (isDevelopment || isUsingResendOnboarding) {
       const mode = isDevelopment ? 'Development' : 'Production (Resend Onboarding)';
       console.log(`\n🔐 PASSWORD RESET REQUEST (${mode})`);
       console.log('─'.repeat(60));
-      console.log(`📧 Usuario original: ${email}`);
-      console.log(`📨 Email enviado a: ${emailTo} (tu correo verificado)`);
-      console.log(`👤 Nombre: ${firstName}`);
+      console.log(`📧 Original user: ${email}`);
+      console.log(`📨 Email sent to: ${emailTo} (your verified email)`);
+      console.log(`👤 Name: ${firstName}`);
       console.log(`🔑 Token: ${resetToken}`);
       console.log(`🔗 URL: ${resetUrl}`);
       console.log('─'.repeat(60) + '\n');
@@ -197,11 +197,11 @@ El equipo de OMI
       });
 
       if (error) {
-        console.error('⚠️  Error sending email (Resend):', error);
+        console.error('⚠️  Error sending email via Resend:', error);
         throw new Error('Failed to send password reset email');
       }
 
-      console.log(`✅ Password reset email sent to: ${emailTo}${emailTo !== email ? ` (original: ${email})` : ''}`);
+      console.log(`✅ Password reset email sent successfully to: ${emailTo}${emailTo !== email ? ` (original user: ${email})` : ''}`);
     } catch (error) {
       console.error('⚠️  Error sending email (exception):', error);
       throw new Error('Failed to send password reset email');

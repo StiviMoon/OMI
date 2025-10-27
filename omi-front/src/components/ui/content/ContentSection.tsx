@@ -25,28 +25,17 @@ interface Movie {
 interface ContentSectionProps {
   title: string;
   movies: Movie[];
-  onAddToList?: (id: string) => void;
   isPreview?: boolean;
 }
 
 export const ContentSection: React.FC<ContentSectionProps> = ({ 
   title, 
   movies, 
-  onAddToList,
   isPreview = false 
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [favorites, setFavorites] = useState<string[]>([]);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
-
-  // Cargar favoritos del localStorage
-  useEffect(() => {
-    const savedFavorites = localStorage.getItem('favorites');
-    if (savedFavorites) {
-      setFavorites(JSON.parse(savedFavorites));
-    }
-  }, []);
 
   // Verificar si se puede hacer scroll
   const checkScroll = () => {
@@ -100,23 +89,6 @@ export const ContentSection: React.FC<ContentSectionProps> = ({
     }
   };
 
-  const handleAddToList = (videoId: string) => {
-    setFavorites(prev => {
-      let newFavorites;
-      
-      if (prev.includes(videoId)) {
-        newFavorites = prev.filter(id => id !== videoId);
-      } else {
-        newFavorites = [...prev, videoId];
-      }
-      
-      localStorage.setItem('favorites', JSON.stringify(newFavorites));
-      onAddToList?.(videoId);
-      
-      return newFavorites;
-    });
-  };
-
   return (
     <section className="py-6 sm:py-8 relative w-full">
       <div className="flex items-center justify-between mb-4 sm:mb-6 px-4 sm:px-8 lg:px-16">
@@ -160,8 +132,6 @@ export const ContentSection: React.FC<ContentSectionProps> = ({
                 width={movie.width}
                 height={movie.height}
                 year={movie.year}
-                onAddToList={handleAddToList}
-                isInList={favorites.includes(movie.id)}
                 isPreview={isPreview}
               />
             </div>

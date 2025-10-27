@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useEffect } from 'react';
-import { X, Plus, Check } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { X, Plus, Check, Play, Pause, Volume2, VolumeX, Maximize, Square, Subtitles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { toggleFavorite, isFavorite } from '@/lib/favorites';
 
 interface VideoModalProps {
   isOpen: boolean;
@@ -21,17 +22,39 @@ interface VideoModalProps {
     width?: number;
     height?: number;
   };
-  onAddToList?: (id: string) => void;
-  isInList?: boolean;
+  onFavoriteUpdate?: (isInFavorites: boolean) => void; // 👈 NUEVA PROP AGREGADA
 }
 
 export const VideoModal: React.FC<VideoModalProps> = ({ 
   isOpen, 
   onClose, 
   video,
-  onAddToList,
-  isInList = false
+  onFavoriteUpdate, // 👈 NUEVA PROP RECIBIDA
 }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
+  const [showControls, setShowControls] = useState(true);
+  const [showVolumeSlider, setShowVolumeSlider] = useState(false);
+  const [showSubtitles, setShowSubtitles] = useState(false);
+  const [isInFavorites, setIsInFavorites] = useState(false);
+  const [isLoadingFavorite, setIsLoadingFavorite] = useState(false);
+  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Verificar si el video está en favoritos cuando se abre el modal
+  useEffect(() => {
+    const checkFavorite = async () => {
+      if (isOpen && video.id) {
+        const inFavorites = await isFavorite(video.id);
+        setIsInFavorites(inFavorites);
+      }
+    };
+    checkFavorite();
+  }, [isOpen, video.id]);
+
   // Cerrar con ESC
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -49,13 +72,143 @@ export const VideoModal: React.FC<VideoModalProps> = ({
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  // Actualizar tiempo del video
+  useEffect(() => {
+    const videoEl = videoRef.current;
+    if (!videoEl) return;
 
-  const formatDuration = (seconds: number) => {
+    const handleTimeUpdate = () => {
+      setCurrentTime(videoEl.currentTime);
+    };
+    
+    const handleLoadedMetadata = () => {
+      setDuration(videoEl.duration);
+    };
+    
+    const handlePlay = () => setIsPlaying(true);
+    const handlePause = () => setIsPlaying(false);
+    const handleEnded = () => setIsPlaying(false);
+
+    videoEl.addEventListener('timeupdate', handleTimeUpdate);
+    videoEl.addEventListener('loadedmetadata', handleLoadedMetadata);
+    videoEl.addEventListener('play', handlePlay);
+    videoEl.addEventListener('pause', handlePause);
+    videoEl.addEventListener('ended', handleEnded);
+
+    return () => {
+      videoEl.removeEventListener('timeupdate', handleTimeUpdate);
+      videoEl.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      videoEl.removeEventListener('play', handlePlay);
+      videoEl.removeEventListener('pause', handlePause);
+      videoEl.removeEventListener('ended', handleEnded);
+    };
+  }, [isOpen]);
+
+  // Auto-ocultar controles
+  const handleMouseMove = () => {
+    setShowControls(true);
+    if (controlsTimeoutRef.current) {
+      clearTimeout(controlsTimeoutRef.current);
+    }
+    controlsTimeoutRef.current = setTimeout(() => {
+      if (isPlaying) setShowControls(false);
+    }, 3000);
+  };
+
+  // 🆕 Manejar favoritos - MODIFICADO
+  const handleToggleFavorite = async () => {
+    setIsLoadingFavorite(true);
+    try {
+      const success = await toggleFavorite(video);
+      if (success) {
+        const newState = !isInFavorites;
+        setIsInFavorites(newState);
+        // 👈 Notificar al componente padre (MovieCard) del cambio
+        onFavoriteUpdate?.(newState);
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+    } finally {
+      setIsLoadingFavorite(false);
+    }
+  };
+
+  // Funciones de control
+  const togglePlay = () => {
+    const videoEl = videoRef.current;
+    if (!videoEl) return;
+    
+    if (videoEl.paused) {
+      videoEl.play();
+    } else {
+      videoEl.pause();
+    }
+  };
+
+  const handleStop = () => {
+    const videoEl = videoRef.current;
+    if (videoEl) {
+      videoEl.pause();
+      videoEl.currentTime = 0;
+      setIsPlaying(false);
+    }
+    onClose();
+  };
+
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const videoEl = videoRef.current;
+    if (!videoEl) return;
+    
+    const newTime = parseFloat(e.target.value);
+    videoEl.currentTime = newTime;
+    setCurrentTime(newTime);
+  };
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const videoEl = videoRef.current;
+    if (!videoEl) return;
+    
+    const newVolume = parseFloat(e.target.value);
+    videoEl.volume = newVolume;
+    setVolume(newVolume);
+    setIsMuted(newVolume === 0);
+  };
+
+  const toggleMute = () => {
+    const videoEl = videoRef.current;
+    if (!videoEl) return;
+    
+    if (isMuted) {
+      videoEl.volume = volume || 0.5;
+      setIsMuted(false);
+    } else {
+      videoEl.volume = 0;
+      setIsMuted(true);
+    }
+  };
+
+  const toggleFullscreen = () => {
+    const videoContainer = videoRef.current?.parentElement;
+    if (!videoContainer) return;
+
+    if (!document.fullscreenElement) {
+      videoContainer.requestFullscreen();
+    } else {
+      document.exitFullscreen();
+    }
+  };
+
+  const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
+
+  if (!isOpen) return null;
+
+  // Calcular progreso para CSS variables
+  const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const volumePercent = (isMuted ? 0 : volume) * 100;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -66,7 +219,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({
       />
       
       {/* Modal */}
-      <div className="relative w-full max-w-6xl mx-4 bg-zinc-900 rounded-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-300">
+      <div className="relative w-full max-w-6xl mx-4 bg-zinc-900 rounded-lg overflow-hidden shadow-2xl">
         {/* Close button */}
         <Button
           variant="ghost"
@@ -79,17 +232,144 @@ export const VideoModal: React.FC<VideoModalProps> = ({
 
         <div className="flex flex-col lg:flex-row max-h-[90vh]">
           {/* Video Player Section */}
-          <div className="lg:w-2/3 bg-black">
+          <div className="lg:w-2/3 bg-black relative group" onMouseMove={handleMouseMove}>
             <div className="relative aspect-video">
               <video
+                ref={videoRef}
                 src={video.videoUrl}
                 poster={video.posterUrl}
-                controls
                 autoPlay
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain cursor-pointer"
+                onClick={togglePlay}
               >
                 Tu navegador no soporta el elemento de video.
               </video>
+
+              {/* Subtítulos simulados */}
+              {showSubtitles && (
+                <div className="absolute bottom-20 left-0 right-0 text-center">
+                  <div className="inline-block bg-black/80 px-4 py-2 rounded text-white text-lg">
+                    [Subtítulos activados - Agrega tu texto aquí]
+                  </div>
+                </div>
+              )}
+
+              {/* Controles personalizados */}
+              <div 
+                className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4 transition-opacity duration-300 ${
+                  showControls ? 'opacity-100' : 'opacity-0'
+                }`}
+              >
+                {/* Barra de progreso */}
+                <input
+                  type="range"
+                  min="0"
+                  max={duration || 100}
+                  step="0.1"
+                  value={currentTime}
+                  onChange={handleSeek}
+                  className="video-progress-slider w-full mb-3"
+                  style={{
+                    '--progress': `${progressPercent}%`
+                  } as React.CSSProperties}
+                />
+
+                <div className="flex items-center justify-between gap-2">
+                  {/* Controles izquierda */}
+                  <div className="flex items-center gap-2">
+                    {/* Play/Pause */}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={togglePlay}
+                      className="text-white hover:bg-white/20"
+                    >
+                      {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
+                    </Button>
+
+                    {/* Stop */}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleStop}
+                      className="text-white hover:bg-white/20"
+                      title="Detener y cerrar"
+                    >
+                      <Square className="h-5 w-5 fill-current" />
+                    </Button>
+
+                    {/* Tiempo */}
+                    <span className="text-white text-sm font-medium">
+                      {formatTime(currentTime)} / {formatTime(duration)}
+                    </span>
+                  </div>
+
+                  {/* Controles derecha */}
+                  <div className="flex items-center gap-2">
+                    {/* Subtítulos */}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setShowSubtitles(!showSubtitles)}
+                      className={`text-white hover:bg-white/20 ${
+                        showSubtitles ? 'bg-white/20' : ''
+                      }`}
+                      title="Subtítulos"
+                    >
+                      <Subtitles className="h-5 w-5" />
+                    </Button>
+
+                    {/* Volumen */}
+                    <div className="flex items-center gap-2 relative">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={toggleMute}
+                        onMouseEnter={() => setShowVolumeSlider(true)}
+                        className="text-white hover:bg-white/20"
+                      >
+                        {isMuted || volume === 0 ? (
+                          <VolumeX className="h-5 w-5" />
+                        ) : (
+                          <Volume2 className="h-5 w-5" />
+                        )}
+                      </Button>
+
+                      {/* Slider de volumen */}
+                      {showVolumeSlider && (
+                        <div 
+                          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-black/90 p-3 rounded-lg"
+                          onMouseLeave={() => setShowVolumeSlider(false)}
+                        >
+                          <input
+                            type="range"
+                            min="0"
+                            max="1"
+                            step="0.1"
+                            value={isMuted ? 0 : volume}
+                            onChange={handleVolumeChange}
+                            className="video-volume-slider"
+                            style={{
+                              '--volume': `${volumePercent}%`
+                            } as React.CSSProperties}
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Pantalla completa */}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={toggleFullscreen}
+                      className="text-white hover:bg-white/20"
+                      title="Pantalla completa"
+                    >
+                      <Maximize className="h-5 w-5" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -103,13 +383,20 @@ export const VideoModal: React.FC<VideoModalProps> = ({
 
               {/* Action Buttons */}
               <div className="flex gap-3 mb-6">
-                
                 <Button 
                   variant="outline"
-                  className="border-gray-600 hover:bg-cyan-300 flex items-center gap-2"
-                  onClick={() => onAddToList?.(video.id)}
+                  className={`border-gray-600 hover:bg-cyan-300 flex items-center gap-2 transition-all ${
+                    isInFavorites ? 'bg-cyan-500/20 border-cyan-500' : ''
+                  }`}
+                  onClick={handleToggleFavorite}
+                  disabled={isLoadingFavorite}
                 >
-                  {isInList ? (
+                  {isLoadingFavorite ? (
+                    <>
+                      <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Guardando...
+                    </>
+                  ) : isInFavorites ? (
                     <>
                       <Check className="h-5 w-5" />
                       En mi lista
@@ -117,7 +404,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({
                   ) : (
                     <>
                       <Plus className="h-5 w-5" />
-                      Añadir
+                      Añadir a favoritos
                     </>
                   )}
                 </Button>
@@ -129,7 +416,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({
                   <div className="flex items-center gap-2">
                     <span className="text-gray-400 text-sm">Duración:</span>
                     <span className="text-white text-sm font-medium">
-                      {formatDuration(video.duration)}
+                      {formatTime(video.duration)}
                     </span>
                   </div>
                 )}

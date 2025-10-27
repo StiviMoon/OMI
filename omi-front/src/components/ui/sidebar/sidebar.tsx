@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import { Search, Film, Tv, Baby, Zap, History, User, Menu, X, HandHeart } from 'lucide-react';
+import { Search, Film, Star, History, User, Menu, X, HandHeart } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { SidebarItem } from './SidebarItem';
 import { SearchModal } from './SearchModal';
@@ -22,9 +22,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onVideoSelect }) => {
     if (pathname === '/about') return 'Sobre Nosotros';
     if (pathname === '/videos') return 'PELICULA';
     if (pathname === '/historial') return 'HISTORIAL';
-    if (pathname === '/series') return 'SERIES';
-    if (pathname === '/ninos') return 'NIÑOS';
-    if (pathname === '/anime') return 'ANIME';
+    
+    if (pathname === '/fav') return 'FAVORITOS';
     return 'PELICULA'; // Default
   }, [pathname]);
 
@@ -63,15 +62,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onVideoSelect }) => {
       case 'Sobre Nosotros':
         router.push('/about');
         break;
-      case 'SERIES':
-        // router.push('/series'); // Descomentar cuando tengas la ruta
+      case 'FAVORITOS':
+        router.push('/fav'); // Descomentar cuando tengas la ruta
         break;
-      case 'NIÑOS':
-        // router.push('/ninos'); // Descomentar cuando tengas la ruta
-        break;
-      case 'ANIME':
-        // router.push('/anime'); // Descomentar cuando tengas la ruta
-        break;
+      
       case 'HISTORIAL':
         // router.push('/historial'); // Descomentar cuando tengas la ruta
         break;
@@ -83,9 +77,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onVideoSelect }) => {
   const menuItems = [
     { icon: <Search className="w-5 h-5" />, label: 'BUSCAR' },
     { icon: <Film className="w-5 h-5" />, label: 'PELICULA' },
-    { icon: <Tv className="w-5 h-5" />, label: 'SERIES' },
-    { icon: <Baby className="w-5 h-5" />, label: 'NIÑOS' },
-    { icon: <Zap className="w-5 h-5" />, label: 'ANIME' },
+    { icon: <Star className="w-5 h-5" />, label: 'FAVORITOS' }
+    
   ];
 
   const bottomItems = [
