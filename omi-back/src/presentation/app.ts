@@ -15,6 +15,11 @@ import { ResetPasswordUseCase } from '../domain/use-cases/reset-password.use-cas
 import { MongoUserRepository } from '../infrastructure/repositories/mongo-user.repository';
 import { PexelsService } from '../infrastructure/services/pexels.service';
 import { EmailService } from '../infrastructure/services/email.service';
+import favoritesRoutes from './routes/favorites.routes';
+import ratingsRoutes from './routes/ratings.routes';
+import { FavoritesController } from './controllers/favorites.controller';
+import { RatingsController } from './controllers/ratings.controller';
+
 
 export class App {
   private app: express.Application;
@@ -69,6 +74,10 @@ export class App {
   private setupRoutes(): void {
     this.app.use('/api/auth', createAuthRoutes(this.authController));
     this.app.use('/api/videos', createPexelsRoutes(this.pexelsController));
+    this.app.use('/api/favorites', favoritesRoutes);
+    this.app.use('/api/ratings', ratingsRoutes);
+
+
 
     this.app.get('/', (req, res) => {
       res.json({
@@ -77,6 +86,8 @@ export class App {
         endpoints: {
           auth: '/api/auth',
           videos: '/api/videos',
+          favorites: '/api/favorites',
+          ratings: '/api/ratings',
         },
       });
     });

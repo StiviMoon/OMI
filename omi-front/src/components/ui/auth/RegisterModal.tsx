@@ -246,7 +246,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
 
             {/* Title */}
             <h2 className="text-2xl font-bold text-white text-center mb-2">
-              CREAR CUENTA
+              Crear cuenta
             </h2>
             <p className="text-gray-400 text-center text-sm mb-5">
               Únete y disfruta del mejor contenido
@@ -451,7 +451,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
                 disabled={isLoading}
                 className="w-full bg-gradient-to-r from-green-600 to-cyan-600 hover:from-green-700 hover:to-cyan-700 text-white font-semibold py-2.5 rounded-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'CREANDO CUENTA...' : 'CREAR CUENTA'}
+                {isLoading ? 'Creando cuenta...' : 'Crear cuenta'}
               </Button>
             </form>
 
