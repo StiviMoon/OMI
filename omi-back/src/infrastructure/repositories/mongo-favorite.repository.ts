@@ -18,7 +18,7 @@ export class MongoFavoriteRepository implements IFavoriteRepository {
   }
 
   async getUserFavorites(userId: string): Promise<Favorite[]> {
-    const results = await this.collection.find({ userId }).   toArray();
+    const results = await this.collection.find({ userId }).toArray();
     return results as unknown as Favorite[];
   }
 

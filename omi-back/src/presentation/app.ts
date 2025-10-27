@@ -15,31 +15,42 @@ import { ResetPasswordUseCase } from '../domain/use-cases/reset-password.use-cas
 import { MongoUserRepository } from '../infrastructure/repositories/mongo-user.repository';
 import { PexelsService } from '../infrastructure/services/pexels.service';
 import { EmailService } from '../infrastructure/services/email.service';
-import favoritesRoutes from './routes/favorites.routes';
-import ratingsRoutes from './routes/ratings.routes';
 import { FavoritesController } from './controllers/favorites.controller';
 import { RatingsController } from './controllers/ratings.controller';
-
+import { MongoFavoriteRepository } from '../infrastructure/repositories/mongo-favorite.repository';
+import { RatingRepositoryImpl } from '../infrastructure/repositories/mongo-rating.repository';
+import { ListFavoritesUseCase } from '../domain/use-cases/list-favorite.use-case';
+import { AddFavoriteUseCase } from '../domain/use-cases/add-favorite.use-case';
+import { RemoveFavoriteUseCase } from '../domain/use-cases/remove-favorite.use-case';
+import { IsFavoriteUseCase } from '../domain/use-cases/is-favorite.use-case';
+import { GetRatingsUseCase } from '../domain/use-cases/get.rating.use-case';
+import { AddRatingUseCase } from '../domain/use-cases/add-rating.use-case';
+import { UpdateRatingUseCase } from '../domain/use-cases/update-rating.use-case';
+import { DeleteRatingUseCase } from '../domain/use-cases/delete-rating.use-case';
+import createFavoritesRoutes from './routes/favorites.routes';
+import createRatingsRoutes from './routes/ratings.routes';
 
 export class App {
   private app: express.Application;
-  private authController!: AuthController;
-  private pexelsController!: PexelsController;
 
   constructor() {
     this.app = express();
-    this.setupDependencies();
     this.setupMiddleware();
     this.setupRoutes();
     this.setupErrorHandling();
   }
 
-  private setupDependencies(): void {
-    // Initialize repositories and services
+  private setupRoutes(): void {
+    // Repositories
     const userRepository = new MongoUserRepository();
-    const emailService = new EmailService();
+    const favoriteRepository = new MongoFavoriteRepository();
+    const ratingRepository = new RatingRepositoryImpl();
 
-    // Initialize use cases
+    // Services
+    const emailService = new EmailService();
+    const pexelsService = new PexelsService();
+
+    // Auth use cases
     const registerUseCase = new RegisterUseCase(userRepository);
     const loginUseCase = new LoginUseCase(userRepository);
     const updateProfileUseCase = new UpdateProfileUseCase(userRepository);
@@ -47,8 +58,20 @@ export class App {
     const forgotPasswordUseCase = new ForgotPasswordUseCase(userRepository, emailService);
     const resetPasswordUseCase = new ResetPasswordUseCase(userRepository);
 
-    // Initialize auth controller
-    this.authController = new AuthController(
+    // Favorites use cases
+    const listFavoritesUseCase = new ListFavoritesUseCase(favoriteRepository);
+    const addFavoriteUseCase = new AddFavoriteUseCase(favoriteRepository);
+    const removeFavoriteUseCase = new RemoveFavoriteUseCase(favoriteRepository);
+    const isFavoriteUseCase = new IsFavoriteUseCase(favoriteRepository);
+
+    // Ratings use cases
+    const getRatingsUseCase = new GetRatingsUseCase(ratingRepository);
+    const addRatingUseCase = new AddRatingUseCase(ratingRepository);
+    const updateRatingUseCase = new UpdateRatingUseCase(ratingRepository);
+    const deleteRatingUseCase = new DeleteRatingUseCase(ratingRepository);
+
+    // Controllers
+    const authController = new AuthController(
       registerUseCase,
       loginUseCase,
       updateProfileUseCase,
@@ -58,26 +81,27 @@ export class App {
       userRepository
     );
 
-    // Initialize pexels controller
-    const pexelsService = new PexelsService();
-    this.pexelsController = new PexelsController(pexelsService);
-  }
+    const pexelsController = new PexelsController(pexelsService);
 
-  private setupMiddleware(): void {
-    this.app.use(cors({
-      origin: config.cors.origin,
-      credentials: true
-    }));
-    this.app.use(express.json());
-  }
+    const favoritesController = new FavoritesController(
+      listFavoritesUseCase,
+      addFavoriteUseCase,
+      removeFavoriteUseCase,
+      isFavoriteUseCase
+    );
 
-  private setupRoutes(): void {
-    this.app.use('/api/auth', createAuthRoutes(this.authController));
-    this.app.use('/api/videos', createPexelsRoutes(this.pexelsController));
-    this.app.use('/api/favorites', favoritesRoutes);
-    this.app.use('/api/ratings', ratingsRoutes);
+    const ratingsController = new RatingsController(
+      getRatingsUseCase,
+      addRatingUseCase,
+      updateRatingUseCase,
+      deleteRatingUseCase
+    );
 
-
+    // Setup routes
+    this.app.use('/api/auth', createAuthRoutes(authController));
+    this.app.use('/api/videos', createPexelsRoutes(pexelsController));
+    this.app.use('/api/favorites', createFavoritesRoutes(favoritesController));
+    this.app.use('/api/ratings', createRatingsRoutes(ratingsController));
 
     this.app.get('/', (req, res) => {
       res.json({
@@ -91,6 +115,14 @@ export class App {
         },
       });
     });
+  }
+
+  private setupMiddleware(): void {
+    this.app.use(cors({
+      origin: config.cors.origin,
+      credentials: true
+    }));
+    this.app.use(express.json());
   }
 
   private setupErrorHandling(): void {

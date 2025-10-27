@@ -1,63 +1,113 @@
 import { Request, Response } from 'express';
-import { DatabaseConnection } from '../../infrastructure/database/connection';
-
+import { GetRatingsUseCase } from '../../domain/use-cases/get.rating.use-case';
+import { AddRatingUseCase } from '../../domain/use-cases/add-rating.use-case';
+import { UpdateRatingUseCase } from '../../domain/use-cases/update-rating.use-case';
+import { DeleteRatingUseCase } from '../../domain/use-cases/delete-rating.use-case';
 
 export class RatingsController {
-  private db = DatabaseConnection.getInstance();
+  constructor(
+    private getRatingsUseCase: GetRatingsUseCase,
+    private addRatingUseCase: AddRatingUseCase,
+    private updateRatingUseCase: UpdateRatingUseCase,
+    private deleteRatingUseCase: DeleteRatingUseCase
+  ) {}
 
-  async list(req: Request, res: Response) {
-    const { pexelsId } = req.params;
+  async list(req: Request, res: Response): Promise<void> {
     try {
-      const ratings = await this.db.getCollection('ratings').find({ pexelsId }).toArray();
-      res.json(ratings);
+      const { pexelsId } = req.params;
+
+      if (!pexelsId) {
+        res.status(400).json({ error: 'Pexels ID is required' });
+        return;
+      }
+
+      const ratings = await this.getRatingsUseCase.execute(pexelsId);
+      
+      res.status(200).json({
+        message: 'Ratings retrieved successfully',
+        data: ratings.map(rating => rating.toJSON()),
+      });
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Error obteniendo ratings' });
+      const message = error instanceof Error ? error.message : 'Unknown error occurred';
+      res.status(500).json({ error: message });
     }
   }
 
-  async add(req: Request, res: Response) {
-    const { userId, pexelsId, score, comment } = req.body;
+  async add(req: Request, res: Response): Promise<void> {
     try {
-      const collection = this.db.getCollection('ratings');
-      const existing = await collection.findOne({ userId, pexelsId });
+      const { userId, pexelsId, score, comment } = req.body;
 
-      if (existing) return res.status(400).json({ message: 'Ya calificaste este contenido' });
+      if (!userId || !pexelsId || score === undefined || !comment) {
+        res.status(400).json({ error: 'User ID, Pexels ID, score, and comment are required' });
+        return;
+      }
 
-      const rating = { userId, pexelsId, score, comment, createdAt: new Date() };
-      await collection.insertOne(rating);
-      res.status(201).json(rating);
+      if (score < 1 || score > 5) {
+        res.status(400).json({ error: 'Score must be between 1 and 5' });
+        return;
+      }
+
+      const rating = await this.addRatingUseCase.execute(userId, pexelsId, score, comment);
+      
+      res.status(201).json({
+        message: 'Rating added successfully',
+        data: rating.toJSON(),
+      });
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Error agregando rating' });
+      const message = error instanceof Error ? error.message : 'Unknown error occurred';
+      res.status(400).json({ error: message });
     }
   }
 
-  async update(req: Request, res: Response) {
-    const { userId, pexelsId } = req.params;
-    const { score, comment } = req.body;
+  async update(req: Request, res: Response): Promise<void> {
     try {
-      const result = await this.db.getCollection('ratings').updateOne(
-        { userId, pexelsId },
-        { $set: { score, comment } }
-      );
-      if (result.matchedCount === 0) return res.status(404).json({ message: 'No se encontró el rating' });
-      res.json({ message: 'Rating actualizado' });
+      const { userId, pexelsId } = req.params;
+      const { score, comment } = req.body;
+
+      if (!userId || !pexelsId || score === undefined || !comment) {
+        res.status(400).json({ error: 'Score and comment are required' });
+        return;
+      }
+
+      if (score < 1 || score > 5) {
+        res.status(400).json({ error: 'Score must be between 1 and 5' });
+        return;
+      }
+
+      const success = await this.updateRatingUseCase.execute(userId, pexelsId, score, comment);
+      
+      if (!success) {
+        res.status(404).json({ error: 'Rating not found' });
+        return;
+      }
+
+      res.status(200).json({ message: 'Rating updated successfully' });
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Error actualizando rating' });
+      const message = error instanceof Error ? error.message : 'Unknown error occurred';
+      res.status(500).json({ error: message });
     }
   }
 
-  async remove(req: Request, res: Response) {
-    const { userId, pexelsId } = req.params;
+  async remove(req: Request, res: Response): Promise<void> {
     try {
-      const result = await this.db.getCollection('ratings').deleteOne({ userId, pexelsId });
-      if (result.deletedCount === 0) return res.status(404).json({ message: 'No se encontró el rating' });
-      res.json({ message: 'Rating eliminado' });
+      const { userId, pexelsId } = req.params;
+
+      if (!userId || !pexelsId) {
+        res.status(400).json({ error: 'User ID and Pexels ID are required' });
+        return;
+      }
+
+      const success = await this.deleteRatingUseCase.execute(userId, pexelsId);
+      
+      if (!success) {
+        res.status(404).json({ error: 'Rating not found' });
+        return;
+      }
+
+      res.status(200).json({ message: 'Rating deleted successfully' });
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Error eliminando rating' });
+      const message = error instanceof Error ? error.message : 'Unknown error occurred';
+      res.status(500).json({ error: message });
     }
   }
 }
