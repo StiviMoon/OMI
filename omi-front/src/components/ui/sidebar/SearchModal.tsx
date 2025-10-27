@@ -67,7 +67,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onVid
       const results = await videosAPI.search(params as import('@/lib/types').SearchParams);
       setMovies(results);
     } catch (err) {
-      console.error('❌ Error en búsqueda:', err);
+      console.error('Search error:', err);
       setError(err instanceof Error ? err.message : 'Error al buscar videos');
       setMovies([]);
     } finally {

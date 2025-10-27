@@ -70,7 +70,6 @@ async function fetchAPI<T>(endpoint: string, params?: Record<string, string | nu
   const queryString = params ? `?${buildQueryString(params)}` : '';
   const url = `${API_BASE_URL}${endpoint}${queryString}`;
 
-  console.log('🔍 Fetching URL:', url);
   console.log('🌐 API_BASE_URL:', API_BASE_URL);
 
   try {
@@ -85,7 +84,6 @@ async function fetchAPI<T>(endpoint: string, params?: Record<string, string | nu
 
     // Obtener el texto de la respuesta primero
     const responseText = await response.text();
-    console.log('📦 Raw Response:', responseText.substring(0, 200));
 
     if (!response.ok) {
       let errorData;
@@ -95,7 +93,7 @@ async function fetchAPI<T>(endpoint: string, params?: Record<string, string | nu
         errorData = { message: responseText };
       }
       
-      console.error('❌ API Error Response:', {
+      console.error('API Error Response:', {
         status: response.status,
         statusText: response.statusText,
         errorData
@@ -109,7 +107,7 @@ async function fetchAPI<T>(endpoint: string, params?: Record<string, string | nu
     try {
       jsonData = JSON.parse(responseText);
     } catch {
-      console.error('❌ Failed to parse JSON:', responseText);
+      console.error('Failed to parse JSON:', responseText);
       throw new Error('Invalid JSON response from server');
     }
 
@@ -166,10 +164,8 @@ export const videosAPI = {
    */
   async search(params: SearchParams): Promise<Movie[]> {
     try {
-      console.log('🔎 Searching videos with params:', params);
       const data = await fetchAPI<BackendResponse>('/search', params as unknown as Record<string, string | number | boolean | undefined | null>);
       
-      console.log('📊 Search response:', data);
       
       if (!data || !data.success || !data.data?.videos) {
         console.warn('⚠️ No videos in response');
@@ -178,7 +174,7 @@ export const videosAPI = {
       
       return data.data.videos.map(transformVideo);
     } catch (error) {
-      console.error('❌ Error searching videos:', error);
+      console.error('Error searching videos:', error);
       return [];
     }
   },
@@ -189,10 +185,8 @@ export const videosAPI = {
    */
   async getPopular(params?: PopularParams): Promise<Movie[]> {
     try {
-      console.log('🔥 Fetching popular videos with params:', params);
       const data = await fetchAPI<BackendResponse>('/popular', params as unknown as Record<string, string | number | boolean | undefined | null> | undefined);
       
-      console.log('📊 Popular response:', data);
       
       if (!data || !data.success || !data.data?.videos) {
         console.warn('⚠️ No videos in response');
@@ -201,7 +195,7 @@ export const videosAPI = {
       
       return data.data.videos.map(transformVideo);
     } catch (error) {
-      console.error('❌ Error fetching popular videos:', error);
+      console.error('Error fetching popular videos:', error);
       return [];
     }
   },
@@ -212,7 +206,6 @@ export const videosAPI = {
    */
   async getById(id: string): Promise<Movie | null> {
     try {
-      console.log('🎬 Fetching video by ID:', id);
       const data = await fetchAPI<SingleVideoResponse>(`/${id}`);
       
       if (!data || !data.success || !data.data?.video) {
@@ -222,7 +215,7 @@ export const videosAPI = {
       
       return transformVideo(data.data.video);
     } catch (error) {
-      console.error(`❌ Error fetching video ${id}:`, error);
+      console.error(`Error fetching video ${id}:`, error);
       return null;
     }
   },
@@ -244,7 +237,6 @@ export const videosAPI = {
     videoUrl?: string;
   } | null> {
     try {
-      console.log('⭐ Fetching featured video');
       const data = await fetchAPI<BackendResponse>('/popular', { per_page: 1 });
       
       if (!data || !data.success || !data.data?.videos || data.data.videos.length === 0) {
@@ -267,7 +259,7 @@ export const videosAPI = {
         videoUrl: hdFile?.link,
       };
     } catch (error) {
-      console.error('❌ Error fetching featured video:', error);
+      console.error('Error fetching featured video:', error);
       return null;
     }
   },

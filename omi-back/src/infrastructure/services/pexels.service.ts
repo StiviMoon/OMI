@@ -97,9 +97,16 @@ export class PexelsService {
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
         const errorMessage = error.response?.data?.error || error.message;
+        
+        if (status === 429) {
+          console.error('⚠️  Pexels API Rate Limit Exceeded - 429');
+          throw new Error('API rate limit exceeded. Please wait a moment before trying again.');
+        }
+        
         console.error('Pexels API Error:', {
-          status: error.response?.status,
+          status,
           data: error.response?.data,
           message: errorMessage,
         });
