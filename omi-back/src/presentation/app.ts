@@ -142,21 +142,77 @@ export class App {
   }
 
   private setupMiddleware(): void {
-    const allowedOrigins = config.nodeEnv === 'production'
+    // Configurar orígenes permitidos
+    // Detectar producción por presencia de Render o por NODE_ENV
+    const isProduction = config.nodeEnv === 'production' || process.env.RENDER;
+    
+    const allowedOrigins = isProduction
       ? [
           'https://omi-front.vercel.app',
           /^https:\/\/.*\.vercel\.app$/,
           'http://localhost:3000'
         ]
-      : config.cors.origin;
+      : [
+          config.cors.origin,
+          'http://localhost:3000',
+          'http://localhost:3001',
+        ];
 
-    this.app.use(cors({
-      origin: allowedOrigins,
+    console.log(`🌍 Environment: ${config.nodeEnv}`);
+    console.log(`🌍 Is Production: ${isProduction}`);
+    console.log(`🌍 Allowed Origins:`, allowedOrigins);
+
+    // Configuración de CORS más robusta
+    const corsOptions = {
+      origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+        // Permitir requests sin origen (ej: Postman, mobile apps, servidor a servidor)
+        if (!origin) {
+          console.log('✅ CORS: Request without origin allowed');
+          return callback(null, true);
+        }
+
+        console.log(`🔍 CORS: Checking origin ${origin}`);
+
+        // Verificar si el origen está permitido
+        const isAllowed = allowedOrigins.some((allowedOrigin) => {
+          if (typeof allowedOrigin === 'string') {
+            return origin === allowedOrigin;
+          }
+          if (allowedOrigin instanceof RegExp) {
+            return allowedOrigin.test(origin);
+          }
+          return false;
+        });
+
+        if (isAllowed) {
+          console.log(`✅ CORS: Origin ${origin} allowed`);
+          callback(null, true);
+        } else {
+          console.warn(`❌ CORS: Origin ${origin} not allowed. Allowed origins:`, allowedOrigins);
+          // En lugar de lanzar error, rechazar silenciosamente
+          callback(null, false);
+        }
+      },
       credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
-    }));
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+      allowedHeaders: [
+        'Content-Type',
+        'Authorization',
+        'X-Requested-With',
+        'Accept',
+        'Origin',
+      ],
+      exposedHeaders: ['Content-Range', 'X-Content-Range'],
+      preflightContinue: false,
+      optionsSuccessStatus: 204,
+      maxAge: 86400, // 24 horas de cache para preflight
+    };
+
+    // Aplicar CORS antes que cualquier otra ruta
+    this.app.use(cors(corsOptions));
+    
     this.app.use(express.json());
+    this.app.use(express.urlencoded({ extended: true }));
   }
 
   private setupErrorHandling(): void {
