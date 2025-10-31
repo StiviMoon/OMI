@@ -1,10 +1,12 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { X, Plus, Check, Play, Pause, Volume2, VolumeX, Maximize, Square, Subtitles } from 'lucide-react';
+import { X, Plus, Check, Play, Pause, Volume2, VolumeX, Maximize, Square, Subtitles, Languages } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toggleFavorite, isFavorite } from '@/lib/favorites';
 import { CommentsSection } from '@/components/ui/comments/CommentsSection';
+import { SubtitleDisplay } from '@/components/ui/subtitles/SubtitleDisplay';
+import { SubtitleLanguage } from '@/lib/subtitles';
 
 interface VideoModalProps {
   isOpen: boolean;
@@ -41,9 +43,12 @@ export const VideoModal: React.FC<VideoModalProps> = ({
   const [showControls, setShowControls] = useState(true);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [showSubtitles, setShowSubtitles] = useState(false);
+  const [subtitleLanguage, setSubtitleLanguage] = useState<SubtitleLanguage>('es');
+  const [showSubtitleMenu, setShowSubtitleMenu] = useState(false);
   const [isInFavorites, setIsInFavorites] = useState(false);
   const [isLoadingFavorite, setIsLoadingFavorite] = useState(false);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const subtitleMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const checkFavorite = async () => {
@@ -101,6 +106,26 @@ export const VideoModal: React.FC<VideoModalProps> = ({
       videoEl.removeEventListener('ended', handleEnded);
     };
   }, [isOpen]);
+
+  // Cerrar menú de subtítulos al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        subtitleMenuRef.current &&
+        !subtitleMenuRef.current.contains(event.target as Node)
+      ) {
+        setShowSubtitleMenu(false);
+      }
+    };
+
+    if (showSubtitleMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showSubtitleMenu]);
 
   const handleMouseMove = () => {
     setShowControls(true);
@@ -235,11 +260,13 @@ export const VideoModal: React.FC<VideoModalProps> = ({
               </video>
 
               {showSubtitles && (
-                <div className="absolute bottom-20 left-0 right-0 text-center">
-                  <div className="inline-block bg-black/80 px-4 py-2 rounded text-white text-lg">
-                    [Subtítulos activados - Agrega tu texto aquí]
-                  </div>
-                </div>
+                <SubtitleDisplay
+                  currentTime={currentTime}
+                  duration={duration}
+                  tags={video.tags}
+                  title={video.title}
+                  language={subtitleLanguage}
+                />
               )}
 
               <div 
@@ -286,18 +313,65 @@ export const VideoModal: React.FC<VideoModalProps> = ({
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setShowSubtitles(!showSubtitles)}
-                      className={`text-white hover:bg-white/20 ${
-                        showSubtitles ? 'bg-white/20' : ''
-                      }`}
-                      title="Subtítulos"
-                    >
-                      <Subtitles className="h-5 w-5" />
-                    </Button>
+                  <div className="flex items-center gap-2 relative">
+                    <div className="relative" ref={subtitleMenuRef}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (showSubtitles) {
+                            setShowSubtitleMenu(!showSubtitleMenu);
+                          } else {
+                            setShowSubtitles(true);
+                          }
+                        }}
+                        className={`text-white hover:bg-white/20 ${
+                          showSubtitles ? 'bg-white/20' : ''
+                        }`}
+                        title="Subtítulos"
+                      >
+                        <Subtitles className="h-5 w-5" />
+                      </Button>
+                      
+                      {showSubtitles && showSubtitleMenu && (
+                        <div
+                          className="absolute bottom-full right-0 mb-2 bg-black/95 backdrop-blur-sm rounded-lg p-2 min-w-[120px] border border-white/10 shadow-xl z-20"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="flex items-center gap-2 px-2 py-1 text-xs text-gray-400 mb-1">
+                            <Languages className="h-3 w-3" />
+                            <span>Idioma</span>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setSubtitleLanguage('es');
+                              setShowSubtitleMenu(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
+                              subtitleLanguage === 'es'
+                                ? 'bg-cyan-500/20 text-cyan-400'
+                                : 'text-gray-300 hover:bg-white/10'
+                            }`}
+                          >
+                            🇪🇸 Español
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSubtitleLanguage('en');
+                              setShowSubtitleMenu(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
+                              subtitleLanguage === 'en'
+                                ? 'bg-cyan-500/20 text-cyan-400'
+                                : 'text-gray-300 hover:bg-white/10'
+                            }`}
+                          >
+                            🇬🇧 English
+                          </button>
+                        </div>
+                      )}
+                    </div>
 
                     <div className="flex items-center gap-2 relative">
                       <Button
