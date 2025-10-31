@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { X, Plus, Check, Play, Pause, Volume2, VolumeX, Maximize, Square, Subtitles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toggleFavorite, isFavorite } from '@/lib/favorites';
+import { CommentsSection } from '@/components/ui/comments/CommentsSection';
 
 interface VideoModalProps {
   isOpen: boolean;
@@ -433,6 +434,9 @@ export const VideoModal: React.FC<VideoModalProps> = ({
                   </div>
                 </div>
               )}
+
+              {/* Sección de Comentarios */}
+              <CommentsSection videoLink={video.videoUrl} />
             </div>
           </div>
         </div>

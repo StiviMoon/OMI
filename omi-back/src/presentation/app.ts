@@ -27,8 +27,15 @@ import { GetRatingsUseCase } from '../domain/use-cases/get.rating.use-case';
 import { AddRatingUseCase } from '../domain/use-cases/add-rating.use-case';
 import { UpdateRatingUseCase } from '../domain/use-cases/update-rating.use-case';
 import { DeleteRatingUseCase } from '../domain/use-cases/delete-rating.use-case';
+import { AddCommentUseCase } from '../domain/use-cases/add-comment.use-case';
+import { ListCommentsUseCase } from '../domain/use-cases/list-comments.use-case';
+import { UpdateCommentUseCase } from '../domain/use-cases/update-comment.use-case';
+import { DeleteCommentUseCase } from '../domain/use-cases/delete-comment.use-case';
+import { MongoCommentRepository } from '../infrastructure/repositories/mongo-comment.repository';
+import { CommentsController } from './controllers/comments.controller';
 import createFavoritesRoutes from './routes/favorites.routes';
 import createRatingsRoutes from './routes/ratings.routes';
+import createCommentsRoutes from './routes/comments.routes';
 
 export class App {
   private app: express.Application;
@@ -45,6 +52,7 @@ export class App {
     const userRepository = new MongoUserRepository();
     const favoriteRepository = new MongoFavoriteRepository();
     const ratingRepository = new RatingRepositoryImpl();
+    const commentRepository = new MongoCommentRepository();
 
     // Services
     const emailService = new EmailService();
@@ -69,6 +77,12 @@ export class App {
     const addRatingUseCase = new AddRatingUseCase(ratingRepository);
     const updateRatingUseCase = new UpdateRatingUseCase(ratingRepository);
     const deleteRatingUseCase = new DeleteRatingUseCase(ratingRepository);
+
+    // Comments use cases
+    const addCommentUseCase = new AddCommentUseCase(commentRepository);
+    const listCommentsUseCase = new ListCommentsUseCase(commentRepository);
+    const updateCommentUseCase = new UpdateCommentUseCase(commentRepository);
+    const deleteCommentUseCase = new DeleteCommentUseCase(commentRepository);
 
     // Controllers
     const authController = new AuthController(
@@ -97,11 +111,20 @@ export class App {
       deleteRatingUseCase
     );
 
+    const commentsController = new CommentsController(
+      addCommentUseCase,
+      listCommentsUseCase,
+      updateCommentUseCase,
+      deleteCommentUseCase,
+      userRepository
+    );
+
     // Setup routes
     this.app.use('/api/auth', createAuthRoutes(authController));
     this.app.use('/api/videos', createPexelsRoutes(pexelsController));
     this.app.use('/api/favorites', createFavoritesRoutes(favoritesController));
     this.app.use('/api/ratings', createRatingsRoutes(ratingsController));
+    this.app.use('/api/comments', createCommentsRoutes(commentsController));
 
     this.app.get('/', (req, res) => {
       res.json({
@@ -112,6 +135,7 @@ export class App {
           videos: '/api/videos',
           favorites: '/api/favorites',
           ratings: '/api/ratings',
+          comments: '/api/comments',
         },
       });
     });
