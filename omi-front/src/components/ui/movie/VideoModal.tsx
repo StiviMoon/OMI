@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { X, Plus, Check, Play, Pause, Volume2, VolumeX, Maximize, Square, Subtitles, Languages } from 'lucide-react';
+import { X, Plus, Check, Play, Pause, Volume2, VolumeX, Maximize, Square, Subtitles, Languages, MessageCircle, ArrowLeft, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toggleFavorite, isFavorite } from '@/lib/favorites';
 import { CommentsSection } from '@/components/ui/comments/CommentsSection';
+import { RatingSection } from '@/components/ui/rating/RatingSection';
 import { SubtitleDisplay } from '@/components/ui/subtitles/SubtitleDisplay';
 import { SubtitleLanguage } from '@/lib/subtitles';
 
@@ -47,6 +48,9 @@ export const VideoModal: React.FC<VideoModalProps> = ({
   const [showSubtitleMenu, setShowSubtitleMenu] = useState(false);
   const [isInFavorites, setIsInFavorites] = useState(false);
   const [isLoadingFavorite, setIsLoadingFavorite] = useState(false);
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [showRatingsDrawer, setShowRatingsDrawer] = useState(false);
+  const [mobileTab, setMobileTab] = useState<'info' | 'ratings' | 'comments'>('info');
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const subtitleMenuRef = useRef<HTMLDivElement>(null);
 
@@ -62,7 +66,15 @@ export const VideoModal: React.FC<VideoModalProps> = ({
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        if (showRatingsDrawer) {
+          setShowRatingsDrawer(false);
+        } else if (isFlipped) {
+          setIsFlipped(false);
+        } else {
+          onClose();
+        }
+      }
     };
 
     if (isOpen) {
@@ -74,7 +86,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({
       document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, isFlipped, showRatingsDrawer]);
 
   useEffect(() => {
     const videoEl = videoRef.current;
@@ -107,7 +119,6 @@ export const VideoModal: React.FC<VideoModalProps> = ({
     };
   }, [isOpen]);
 
-  // Cerrar menú de subtítulos al hacer clic fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -244,6 +255,40 @@ export const VideoModal: React.FC<VideoModalProps> = ({
         >
           <X className="h-5 w-5" />
         </Button>
+
+        {/* Mobile Tabs - Ahora incluye Ratings */}
+        <div className="lg:hidden flex border-b border-zinc-800">
+          <button
+            onClick={() => setMobileTab('info')}
+            className={`flex-1 py-3 text-sm font-medium transition-colors ${
+              mobileTab === 'info'
+                ? 'text-cyan-400 border-b-2 border-cyan-400'
+                : 'text-gray-400 hover:text-gray-300'
+            }`}
+          >
+            Información
+          </button>
+          <button
+            onClick={() => setMobileTab('ratings')}
+            className={`flex-1 py-3 text-sm font-medium transition-colors ${
+              mobileTab === 'ratings'
+                ? 'text-cyan-400 border-b-2 border-cyan-400'
+                : 'text-gray-400 hover:text-gray-300'
+            }`}
+          >
+            Calificación
+          </button>
+          <button
+            onClick={() => setMobileTab('comments')}
+            className={`flex-1 py-3 text-sm font-medium transition-colors ${
+              mobileTab === 'comments'
+                ? 'text-cyan-400 border-b-2 border-cyan-400'
+                : 'text-gray-400 hover:text-gray-300'
+            }`}
+          >
+            Comentarios
+          </button>
+        </div>
 
         <div className="flex flex-col lg:flex-row max-h-[90vh]">
           <div className="lg:w-2/3 bg-black relative group" onMouseMove={handleMouseMove}>
@@ -409,7 +454,6 @@ export const VideoModal: React.FC<VideoModalProps> = ({
                       )}
                     </div>
 
-                    {/* Pantalla completa */}
                     <Button
                       variant="ghost"
                       size="icon"
@@ -426,94 +470,275 @@ export const VideoModal: React.FC<VideoModalProps> = ({
           </div>
 
           <div className="lg:w-1/3 bg-zinc-900 flex flex-col max-h-[90vh]">
-            <div className="p-6 overflow-y-auto flex-1">
-              <h2 className="text-2xl font-bold text-white mb-4">
-                {video.title}
-              </h2>
+            {/* Vista Mobile - Sistema de pestañas con Ratings */}
+            <div className="lg:hidden flex-1 overflow-y-auto p-6">
+              {mobileTab === 'info' && (
+                <>
+                  <h2 className="text-2xl font-bold text-white mb-4">
+                    {video.title}
+                  </h2>
 
-              <div className="flex gap-3 mb-6">
-                <Button 
-                  variant="outline"
-                  className={`border-gray-600 hover:bg-cyan-300 flex items-center gap-2 transition-all ${
-                    isInFavorites ? 'bg-cyan-500/20 border-cyan-500' : ''
-                  }`}
-                  onClick={handleToggleFavorite}
-                  disabled={isLoadingFavorite}
-                >
-                  {isLoadingFavorite ? (
-                    <>
-                      <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Guardando...
-                    </>
-                  ) : isInFavorites ? (
-                    <>
-                      <Check className="h-5 w-5" />
-                      En mi lista
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="h-5 w-5" />
-                      Añadir a favoritos
-                    </>
-                  )}
-                </Button>
-              </div>
-
-              <div className="space-y-4 mb-6">
-                {video.duration && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-400 text-sm">Duración:</span>
-                    <span className="text-white text-sm font-medium">
-                      {formatTime(video.duration)}
-                    </span>
-                  </div>
-                )}
-
-                {video.width && video.height && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-400 text-sm">Resolución:</span>
-                    <span className="text-white text-sm font-medium">
-                      {video.width} × {video.height}
-                    </span>
-                  </div>
-                )}
-
-                {video.user && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-400 text-sm">Creador:</span>
-                    <a 
-                      href={video.user.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-400 hover:text-blue-300 text-sm font-medium underline"
+                  <div className="flex gap-3 mb-6">
+                    <Button 
+                      variant="outline"
+                      className={`border-gray-600 hover:bg-cyan-300 flex items-center gap-2 transition-all ${
+                        isInFavorites ? 'bg-cyan-500/20 border-cyan-500' : ''
+                      }`}
+                      onClick={handleToggleFavorite}
+                      disabled={isLoadingFavorite}
                     >
-                      {video.user.name}
-                    </a>
+                      {isLoadingFavorite ? (
+                        <>
+                          <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Guardando...
+                        </>
+                      ) : isInFavorites ? (
+                        <>
+                          <Check className="h-5 w-5" />
+                          En mi lista
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="h-5 w-5" />
+                          Añadir a favoritos
+                        </>
+                      )}
+                    </Button>
                   </div>
-                )}
-              </div>
 
-              {video.tags && video.tags.length > 0 && (
-                <div className="space-y-2">
-                  <h3 className="text-gray-400 text-sm font-semibold">Tags</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {video.tags.map((tag, index) => (
-                      <span
-                        key={index}
-                        className="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded-full text-xs text-gray-300 transition-colors cursor-pointer"
-                      >
-                        {tag}
-                      </span>
-                    ))}
+                  <div className="space-y-4 mb-6">
+                    {video.duration && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-400 text-sm">Duración:</span>
+                        <span className="text-white text-sm font-medium">
+                          {formatTime(video.duration)}
+                        </span>
+                      </div>
+                    )}
+
+                    {video.width && video.height && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-400 text-sm">Resolución:</span>
+                        <span className="text-white text-sm font-medium">
+                          {video.width} × {video.height}
+                        </span>
+                      </div>
+                    )}
+
+                    {video.user && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-400 text-sm">Creador:</span>
+                        <a 
+                          href={video.user.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-400 hover:text-blue-300 text-sm font-medium underline"
+                        >
+                          {video.user.name}
+                        </a>
+                      </div>
+                    )}
                   </div>
-                </div>
+
+                  {video.tags && video.tags.length > 0 && (
+                    <div className="space-y-2">
+                      <h3 className="text-gray-400 text-sm font-semibold">Tags</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {video.tags.map((tag, index) => (
+                          <span
+                            key={index}
+                            className="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded-full text-xs text-gray-300 transition-colors cursor-pointer"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
 
-              {/* Sección de Comentarios */}
-              <CommentsSection videoLink={video.videoUrl} />
+              {mobileTab === 'ratings' && (
+                <RatingSection videoLink={video.videoUrl} />
+              )}
+
+              {mobileTab === 'comments' && (
+                <CommentsSection videoLink={video.videoUrl} />
+              )}
+            </div>
+
+            {/* Vista Desktop - Flip card */}
+            <div className="hidden lg:block flip-card flex-1">
+              <div className={`flip-card-inner ${isFlipped ? 'flipped' : ''}`}>
+                {/* FRONT - Video Info */}
+                <div className="flip-card-front p-6">
+                  <div className="overflow-y-auto h-full">
+                    <h2 className="text-2xl font-bold text-white mb-4">
+                      {video.title}
+                    </h2>
+
+                    <div className="flex gap-3 mb-6">
+  <Button 
+    variant="outline"
+    className={`border-cyan-500 bg-cyan-500/20 hover:bg-cyan-500/40 flex items-center gap-2 transition-all ${
+      isInFavorites ? 'bg-cyan-500/40 border-cyan-400' : ''
+    }`}
+    onClick={handleToggleFavorite}
+    disabled={isLoadingFavorite}
+  >
+    {isLoadingFavorite ? (
+      <>
+        <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        Guardando...
+      </>
+    ) : isInFavorites ? (
+      <>
+        <Check className="h-5 w-5" />
+        En mi lista
+      </>
+    ) : (
+      <>
+        <Plus className="h-5 w-5" />
+        Añadir a favoritos
+      </>
+    )}
+  </Button>
+</div>
+
+                    {/* Ratings Button */}
+                    <Button
+                      variant="ghost"
+                      className="w-full bg-zinc-800 hover:bg-yellow-500/20 border border-yellow-500/50 hover:border-yellow-500 text-yellow-400 flex items-center justify-center gap-2 mb-4 transition-all"
+                      onClick={() => setShowRatingsDrawer(true)}
+                    >
+                      <Star className="h-5 w-5" />
+                      Ver calificaciones
+                    </Button>
+
+                    {/* Comments Button */}
+                    <Button
+                      variant="ghost"
+                      className="w-full bg-zinc-800 hover:bg-cyan-500/20 border border-cyan-500/50 hover:border-cyan-500 text-cyan-400 flex items-center justify-center gap-2 mb-6 transition-all"
+                      onClick={() => setIsFlipped(true)}
+                    >
+                      <MessageCircle className="h-5 w-5" />
+                      Ver comentarios
+                    </Button>
+
+                    <div className="space-y-4 mb-6">
+                      {video.duration && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-400 text-sm">Duración:</span>
+                          <span className="text-white text-sm font-medium">
+                            {formatTime(video.duration)}
+                          </span>
+                        </div>
+                      )}
+
+                      {video.width && video.height && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-400 text-sm">Resolución:</span>
+                          <span className="text-white text-sm font-medium">
+                            {video.width} × {video.height}
+                          </span>
+                        </div>
+                      )}
+
+                      {video.user && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-400 text-sm">Creador:</span>
+                          <a 
+                            href={video.user.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-400 hover:text-blue-300 text-sm font-medium underline"
+                          >
+                            {video.user.name}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+
+                    {video.tags && video.tags.length > 0 && (
+                      <div className="space-y-2">
+                        <h3 className="text-gray-400 text-sm font-semibold">Tags</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {video.tags.map((tag, index) => (
+                            <span
+                              key={index}
+                              className="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded-full text-xs text-gray-300 transition-colors cursor-pointer"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* BACK - Comments */}
+                <div className="flip-card-back">
+                  <div className="flex items-center justify-between mb-4">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsFlipped(false)}
+                      className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10"
+                    >
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      Volver
+                    </Button>
+                    <h3 className="text-lg font-bold text-white">
+                      Comentarios
+                    </h3>
+                    <div className="w-20" />
+                  </div>
+
+                  <div className="overflow-y-auto h-full">
+                    <CommentsSection videoLink={video.videoUrl} />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Ratings Drawer - Solo Desktop */}
+        <div
+          className={`hidden lg:block fixed top-0 right-0 h-full w-96 bg-zinc-900 shadow-2xl transform transition-transform duration-300 ease-in-out z-50 ${
+            showRatingsDrawer ? 'translate-x-0' : 'translate-x-full'
+          }`}
+        >
+          <div className="flex flex-col h-full">
+            <div className="flex items-center justify-between p-4 border-b border-zinc-800">
+              <div className="flex items-center gap-2">
+                <Star className="h-5 w-5 text-yellow-400" />
+                <h3 className="text-lg font-bold text-white">Calificaciones</h3>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowRatingsDrawer(false)}
+                className="text-gray-400 hover:text-white hover:bg-zinc-800"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-6">
+              <RatingSection videoLink={video.videoUrl} />
+            </div>
+          </div>
+        </div>
+
+        {/* Overlay para el drawer */}
+        {showRatingsDrawer && (
+          <div
+            className="hidden lg:block fixed inset-0 bg-black/50 z-40"
+            onClick={() => setShowRatingsDrawer(false)}
+          />
+        )}
       </div>
     </div>
   );

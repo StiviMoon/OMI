@@ -1,9 +1,19 @@
-import { IRatingRepository } from "../repositories/rating.repository";
+import { IRatingRepository } from '../repositories/rating.repository';
 
 export class DeleteRatingUseCase {
-  constructor(private ratingRepo: IRatingRepository) {}
+  constructor(private ratingRepository: IRatingRepository) {}
 
-  async execute(userId: string, pexelsId: string): Promise<boolean> {
-    return this.ratingRepo.deleteRating(userId, pexelsId);
+  async execute(ratingId: string, userId: string): Promise<boolean> {
+    if (!ratingId || !userId) {
+      throw new Error('Rating ID and user ID are required');
+    }
+
+    const success = await this.ratingRepository.deleteRating(ratingId, userId);
+    
+    if (!success) {
+      throw new Error('Rating not found or you do not have permission to delete it');
+    }
+
+    return success;
   }
 }

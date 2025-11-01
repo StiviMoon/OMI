@@ -1,6 +1,6 @@
 'use client';
 
-import { Film, Star, Play, HandHelping, Tags } from 'lucide-react';
+import { Film, Star, Play, HandHelping, Tags, Download } from 'lucide-react';
 import Image from 'next/image';
 import { Header } from '@/components/ui/header/Header';
 
@@ -147,6 +147,29 @@ export default function AboutPage() {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+
+          {/* Manual de Usuario Section */}
+          <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-lg p-6 border border-gray-700">
+            <div className="text-center">
+              <div className="flex justify-center mb-3">
+                <div className="bg-gradient-to-br from-cyan-200 to-cyan-600 text-white p-3 rounded-lg">
+                  <Download className="w-6 h-6" />
+                </div>
+              </div>
+              <h3 className="text-white font-semibold mb-2 text-lg">Manual de Usuario</h3>
+              <p className="text-gray-400 text-sm mb-4">
+                Descarga nuestra guía completa para aprovechar al máximo la plataforma
+              </p>
+              <a
+                href="/manual-usuario.pdf"
+                download="Manual_Usuario_Plataforma.pdf"
+                className="inline-flex items-center gap-2 bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-lg px-6 py-3 hover:border-cyan-500 hover:shadow-lg hover:shadow-cyan-500/20 transition-all text-white font-medium"
+              >
+                <Download className="w-5 h-5" />
+                Descargar Manual
+              </a>
             </div>
           </div>
         </div>
