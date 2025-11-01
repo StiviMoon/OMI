@@ -37,7 +37,7 @@ const teamMembers: TeamMember[] = [
   { role: 'Backend Developer', name: 'Johan Steven Rodriguez Lopez' },
   { role: 'Frontend Developer', name: 'Daniel Alexander Ramirez Maigual' },
   { role: 'Tester', name: 'Alejandro Rubianes Realpe' },
-  { role: 'Database Admin', name: 'Carlos Daniel Salinas' },
+  { role: 'Database', name: 'Carlos Daniel Salinas' },
   { role: 'Project Manager', name: 'Axel David Rubianes' }
 ];
 
@@ -140,25 +140,21 @@ export default function AboutPage() {
                 <Tags className="w-6 h-6" />
               </div>
               <h3 className="text-white font-bold mb-1 text-lg">Versión</h3>
-              <p className="text-gray-400 text-sm">V.1.0.0</p>
+              <p className="text-gray-400 text-sm">V.1.0.4</p>
             </div>
           </div>
 
+
           {/* Team Section */}
-          <div className="bg-zinc-900/50 backdrop-blur-sm rounded-lg p-6 sm:p-8 border border-white/5 hover:border-cyan-500/30 transition-all duration-300">
+          <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-lg p-6 border border-gray-700 flex justify-center">
             <div className="text-center w-full">
-              <h3 className="text-white font-bold mb-6 text-xl sm:text-2xl">Integrantes</h3>
-              <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
+              <h3 className="text-white font-semibold mb-4">Integrantes</h3>
+              <div className="flex flex-wrap justify-center gap-3">
                 {teamMembers.map((member, index) => (
-                  <div 
-                    key={index} 
-                    className="bg-zinc-800/50 hover:bg-zinc-700/50 border border-white/5 hover:border-cyan-500/30 rounded-lg p-4 sm:p-5 transition-all duration-300 group cursor-pointer"
-                  >
-                    <div className="text-center">
-                      <p className="text-white font-semibold text-sm sm:text-base mb-1 group-hover:text-cyan-400 transition-colors">
-                        {member.name}
-                      </p>
-                      <p className="text-gray-400 text-xs sm:text-sm">{member.role}</p>
+                  <div key={index} className="card" data-text={member.role}>
+                    <div className="first-content" />
+                    <div className="second-content text-black-400 w-20 h-auto flex justify-center items-center">
+                      <span>{member.name}</span>
                     </div>
                   </div>
                 ))}
