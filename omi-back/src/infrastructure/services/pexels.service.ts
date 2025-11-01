@@ -26,9 +26,45 @@ export interface GetPopularVideosOptions {
   maxDuration?: number;
 }
 
+/**
+ * Service for interacting with Pexels Video API
+ * 
+ * Provides methods to search, retrieve popular videos, and get video details
+ * from the Pexels platform. Handles API errors, rate limiting, and response
+ * simplification for frontend consumption.
+ * 
+ * @class PexelsService
+ * 
+ * @example
+ * ```typescript
+ * const pexelsService = new PexelsService();
+ * 
+ * // Search videos
+ * const results = await pexelsService.searchVideos({
+ *   query: 'ocean',
+ *   page: 1,
+ *   perPage: 20,
+ *   orientation: 'landscape'
+ * });
+ * 
+ * // Get popular videos
+ * const popular = await pexelsService.getPopularVideos({
+ *   page: 1,
+ *   perPage: 15
+ * });
+ * ```
+ */
 export class PexelsService {
   private axiosInstance: AxiosInstance;
 
+  /**
+   * Creates an instance of PexelsService
+   * 
+   * Initializes Axios instance with Pexels API base URL and authorization header.
+   * Logs warning if API key is missing from environment variables.
+   * 
+   * @constructor
+   */
   constructor() {
     if (!config.pexels.apiKey) {
       console.error('⚠️  PEXELS_API_KEY is missing in environment variables');
@@ -43,7 +79,47 @@ export class PexelsService {
   }
 
   /**
-   * Search for videos with optional filters
+   * Searches for videos on Pexels with optional filters
+   * 
+   * Supports filtering by:
+   * - Orientation (landscape, portrait, square)
+   * - Size (large, medium, small)
+   * - Duration range (min/max in seconds)
+   * 
+   * Rate limits:
+   * - Free plan: 200 requests/hour
+   * - Maximum results per page: 80
+   * 
+   * @method searchVideos
+   * @async
+   * @param {SearchVideosOptions} options - Search options
+   * @param {string} options.query - Search query (required)
+   * @param {number} [options.page=1] - Page number (default: 1)
+   * @param {number} [options.perPage=15] - Results per page (1-80, default: 15)
+   * @param {'landscape'|'portrait'|'square'} [options.orientation] - Video orientation filter
+   * @param {'large'|'medium'|'small'} [options.size] - Video size filter
+   * @param {number} [options.minDuration] - Minimum duration in seconds
+   * @param {number} [options.maxDuration] - Maximum duration in seconds
+   * @returns {Promise<PexelsVideosSearchResponse>} Response with video search results
+   * @throws {Error} If API request fails or rate limit is exceeded
+   * 
+   * @example
+   * ```typescript
+   * // Basic search
+   * const results = await pexelsService.searchVideos({
+   *   query: 'nature'
+   * });
+   * 
+   * // Advanced search with filters
+   * const filtered = await pexelsService.searchVideos({
+   *   query: 'ocean',
+   *   page: 1,
+   *   perPage: 20,
+   *   orientation: 'landscape',
+   *   minDuration: 10,
+   *   maxDuration: 30
+   * });
+   * ```
    */
   async searchVideos(options: SearchVideosOptions): Promise<PexelsVideosSearchResponse> {
     try {
@@ -72,7 +148,41 @@ export class PexelsService {
   }
 
   /**
-   * Get popular/curated videos with optional filters
+   * Retrieves popular/curated videos from Pexels with optional filters
+   * 
+   * Returns hand-picked high-quality videos from Pexels.
+   * Supports filtering by dimensions and duration.
+   * 
+   * Rate limits:
+   * - Free plan: 200 requests/hour
+   * - Maximum results per page: 80
+   * 
+   * @method getPopularVideos
+   * @async
+   * @param {GetPopularVideosOptions} [options={}] - Filter options
+   * @param {number} [options.page=1] - Page number (default: 1)
+   * @param {number} [options.perPage=15] - Results per page (1-80, default: 15)
+   * @param {number} [options.minWidth] - Minimum width in pixels (e.g., 1920 for Full HD)
+   * @param {number} [options.minHeight] - Minimum height in pixels (e.g., 1080 for Full HD)
+   * @param {number} [options.minDuration] - Minimum duration in seconds
+   * @param {number} [options.maxDuration] - Maximum duration in seconds
+   * @returns {Promise<PexelsPopularVideosResponse>} Response with popular videos
+   * @throws {Error} If API key is not configured
+   * @throws {Error} If API request fails or rate limit (429) is exceeded
+   * 
+   * @example
+   * ```typescript
+   * // Get basic popular videos
+   * const popular = await pexelsService.getPopularVideos();
+   * 
+   * // Get Full HD popular videos
+   * const hdVideos = await pexelsService.getPopularVideos({
+   *   page: 1,
+   *   perPage: 20,
+   *   minWidth: 1920,
+   *   minHeight: 1080
+   * });
+   * ```
    */
   async getPopularVideos(options: GetPopularVideosOptions = {}): Promise<PexelsPopularVideosResponse> {
     try {
@@ -117,7 +227,24 @@ export class PexelsService {
   }
 
   /**
-   * Get a specific video by ID
+   * Retrieves a specific video by its Pexels ID
+   * 
+   * Returns complete video information including all available qualities,
+   * metadata, and user information.
+   * 
+   * @method getVideoById
+   * @async
+   * @param {number} id - Pexels video ID
+   * @returns {Promise<PexelsVideo>} Complete video object with all details
+   * @throws {Error} If video ID is invalid or not found
+   * @throws {Error} If API request fails
+   * 
+   * @example
+   * ```typescript
+   * const video = await pexelsService.getVideoById(123456);
+   * console.log(video.url); // Video page URL
+   * console.log(video.video_files); // Available video files
+   * ```
    */
   async getVideoById(id: number): Promise<PexelsVideo> {
     try {
@@ -132,8 +259,26 @@ export class PexelsService {
   }
 
   /**
-   * Simplify video data for frontend consumption
-   * Returns only the most relevant information
+   * Simplifies video data structure for frontend consumption
+   * 
+   * Transforms complex Pexels video object into a simplified format by:
+   * - Extracting only essential fields
+   * - Filtering out SD quality videos
+   * - Sorting video files by quality (highest first)
+   * - Normalizing user information
+   * 
+   * @method simplifyVideo
+   * @param {PexelsVideo} video - Complete Pexels video object
+   * @returns {SimplifiedVideo} Simplified video object with essential data
+   * 
+   * @example
+   * ```typescript
+   * const pexelsVideo = await pexelsService.getVideoById(123456);
+   * const simplified = pexelsService.simplifyVideo(pexelsVideo);
+   * 
+   * // simplified contains: id, width, height, duration, tags, url, thumbnail, user, files
+   * console.log(simplified.files[0].link); // HD video URL
+   * ```
    */
   simplifyVideo(video: PexelsVideo): SimplifiedVideo {
     return {
@@ -161,7 +306,25 @@ export class PexelsService {
   }
 
   /**
-   * Simplify multiple videos
+   * Simplifies multiple videos at once
+   * 
+   * Applies simplification to each video in the array.
+   * Useful for processing search results or popular videos.
+   * 
+   * @method simplifyVideos
+   * @param {PexelsVideo[]} videos - Array of Pexels video objects
+   * @returns {SimplifiedVideo[]} Array of simplified video objects
+   * 
+   * @example
+   * ```typescript
+   * const searchResults = await pexelsService.searchVideos({ query: 'nature' });
+   * const simplified = pexelsService.simplifyVideos(searchResults.videos);
+   * 
+   * // Now you can easily iterate over simplified videos
+   * simplified.forEach(video => {
+   *   console.log(video.id, video.thumbnail);
+   * });
+   * ```
    */
   simplifyVideos(videos: PexelsVideo[]): SimplifiedVideo[] {
     return videos.map(video => this.simplifyVideo(video));

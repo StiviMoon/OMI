@@ -14,7 +14,16 @@ import {
 } from '../../types';
 import { IUserRepository } from '../../domain/repositories/user.repository';
 
-// Extended Request types for authenticated routes
+/**
+ * Extended Request type for authenticated routes
+ * Contains user information added by the authentication middleware
+ * 
+ * @interface AuthenticatedRequest
+ * @extends {Request}
+ * @property {Object} [user] - User information from JWT token
+ * @property {string} [user.userId] - User ID from token
+ * @property {string} [user.email] - User email from token
+ */
 export interface AuthenticatedRequest extends Request {
   user?: {
     userId: string;
@@ -22,7 +31,43 @@ export interface AuthenticatedRequest extends Request {
   };
 }
 
+/**
+ * Controller for handling authentication-related HTTP requests
+ * 
+ * This controller manages all authentication operations including:
+ * - User registration
+ * - User login
+ * - Profile management (get/update)
+ * - Account deletion
+ * - Password recovery (forgot/reset)
+ * 
+ * @class AuthController
+ * 
+ * @example
+ * ```typescript
+ * const authController = new AuthController(
+ *   registerUseCase,
+ *   loginUseCase,
+ *   updateProfileUseCase,
+ *   deleteAccountUseCase,
+ *   forgotPasswordUseCase,
+ *   resetPasswordUseCase,
+ *   userRepository
+ * );
+ * ```
+ */
 export class AuthController {
+  /**
+   * Creates an instance of AuthController
+   * 
+   * @param {RegisterUseCase} registerUseCase - Use case for user registration
+   * @param {LoginUseCase} loginUseCase - Use case for user login
+   * @param {UpdateProfileUseCase} updateProfileUseCase - Use case for profile updates
+   * @param {DeleteAccountUseCase} deleteAccountUseCase - Use case for account deletion
+   * @param {ForgotPasswordUseCase} forgotPasswordUseCase - Use case for password recovery request
+   * @param {ResetPasswordUseCase} resetPasswordUseCase - Use case for password reset
+   * @param {IUserRepository} userRepository - Repository for user data access
+   */
   constructor(
     private registerUseCase: RegisterUseCase,
     private loginUseCase: LoginUseCase,
@@ -33,6 +78,47 @@ export class AuthController {
     private userRepository: IUserRepository
   ) {}
 
+  /**
+   * Handles user registration requests
+   * 
+   * Validates required fields and creates a new user account.
+   * Returns user data and JWT token upon successful registration.
+   * 
+   * @method register
+   * @async
+   * @param {Request<unknown, unknown, RegisterRequest>} req - Express request object
+   * @param {RegisterRequest} req.body - Registration data
+   * @param {string} req.body.email - User email address
+   * @param {string} req.body.password - User password (will be hashed)
+   * @param {string} req.body.firstName - User first name
+   * @param {string} req.body.lastName - User last name
+   * @param {number} req.body.age - User age (must be between 13 and 120)
+   * @param {Response} res - Express response object
+   * @returns {Promise<void>}
+   * 
+   * @throws {Error} 400 - If required fields are missing or validation fails
+   * @throws {Error} 400 - If user already exists with the provided email
+   * 
+   * @example
+   * ```typescript
+   * POST /api/auth/register
+   * Body: {
+   *   "email": "user@example.com",
+   *   "password": "password123",
+   *   "firstName": "Juan",
+   *   "lastName": "Pérez",
+   *   "age": 25
+   * }
+   * 
+   * Response: {
+   *   "message": "User registered successfully",
+   *   "data": {
+   *     "user": { ... },
+   *     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+   *   }
+   * }
+   * ```
+   */
   public register = async (req: Request<unknown, unknown, RegisterRequest>, res: Response): Promise<void> => {
     try {
       const { email, password, firstName, lastName, age } = req.body;
@@ -62,6 +148,40 @@ export class AuthController {
     }
   };
 
+  /**
+   * Handles user login requests
+   * 
+   * Authenticates user credentials and returns JWT token for subsequent requests.
+   * 
+   * @method login
+   * @async
+   * @param {Request<unknown, unknown, LoginRequest>} req - Express request object
+   * @param {LoginRequest} req.body - Login credentials
+   * @param {string} req.body.email - User email address
+   * @param {string} req.body.password - User password (plain text)
+   * @param {Response} res - Express response object
+   * @returns {Promise<void>}
+   * 
+   * @throws {Error} 400 - If email or password is missing
+   * @throws {Error} 401 - If credentials are invalid
+   * 
+   * @example
+   * ```typescript
+   * POST /api/auth/login
+   * Body: {
+   *   "email": "user@example.com",
+   *   "password": "password123"
+   * }
+   * 
+   * Response: {
+   *   "message": "Login successful",
+   *   "data": {
+   *     "user": { ... },
+   *     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+   *   }
+   * }
+   * ```
+   */
   public login = async (req: Request<unknown, unknown, LoginRequest>, res: Response): Promise<void> => {
     try {
       const { email, password } = req.body;
@@ -83,6 +203,45 @@ export class AuthController {
     }
   };
 
+  /**
+   * Retrieves the authenticated user's profile
+   * 
+   * Returns user information based on the JWT token in the Authorization header.
+   * Requires authentication middleware.
+   * 
+   * @method getProfile
+   * @async
+   * @param {AuthenticatedRequest} req - Express request with user info from JWT
+   * @param {Response} res - Express response object
+   * @returns {Promise<void>}
+   * 
+   * @throws {Error} 401 - If user is not authenticated
+   * @throws {Error} 404 - If user is not found in database
+   * @throws {Error} 500 - If database query fails
+   * 
+   * @example
+   * ```typescript
+   * GET /api/auth/profile
+   * Headers: {
+   *   "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+   * }
+   * 
+   * Response: {
+   *   "message": "Profile retrieved successfully",
+   *   "data": {
+   *     "user": {
+   *       "id": "...",
+   *       "email": "user@example.com",
+   *       "firstName": "Juan",
+   *       "lastName": "Pérez",
+   *       "age": 25,
+   *       "createdAt": "...",
+   *       "updatedAt": "..."
+   *     }
+   *   }
+   * }
+   * ```
+   */
   public getProfile = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
       if (!req.user) {

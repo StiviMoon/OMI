@@ -1,7 +1,22 @@
 import { Resend } from 'resend';
 import { config } from '../../config';
 
+/**
+ * Interface for email service operations
+ * Defines contract for email-related functionality
+ * 
+ * @interface IEmailService
+ */
 export interface IEmailService {
+  /**
+   * Sends a password reset email to the user
+   * 
+   * @param {string} email - User's email address
+   * @param {string} resetToken - Secure token for password reset
+   * @param {string} firstName - User's first name for personalization
+   * @returns {Promise<void>}
+   * @throws {Error} If email sending fails
+   */
   sendPasswordResetEmail(
     email: string,
     resetToken: string,
@@ -9,13 +24,73 @@ export interface IEmailService {
   ): Promise<void>;
 }
 
+/**
+ * Email service implementation using Resend
+ * 
+ * Handles sending emails for password recovery and other user notifications.
+ * Supports development mode with email redirection and production mode.
+ * 
+ * @class EmailService
+ * @implements {IEmailService}
+ * 
+ * @example
+ * ```typescript
+ * const emailService = new EmailService();
+ * await emailService.sendPasswordResetEmail(
+ *   'user@example.com',
+ *   'reset-token-123',
+ *   'Juan'
+ * );
+ * ```
+ */
 export class EmailService implements IEmailService {
   private resend: Resend;
 
+  /**
+   * Creates an instance of EmailService
+   * Initializes Resend client with API key from configuration
+   * 
+   * @constructor
+   */
   constructor() {
     this.resend = new Resend(config.email.apiKey);
   }
 
+  /**
+   * Sends a password reset email with a secure token link
+   * 
+   * The email includes:
+   * - Personalized greeting with user's first name
+   * - Secure reset link with token (expires in 1 hour)
+   * - Plain text fallback for email clients
+   * - Professional HTML template with styling
+   * 
+   * In development mode or when using Resend's onboarding email:
+   * - Email is redirected to DEV_EMAIL for testing
+   * - Console logs show the reset token for debugging
+   * 
+   * @method sendPasswordResetEmail
+   * @async
+   * @param {string} email - User's email address where the reset was requested
+   * @param {string} resetToken - Secure token for password reset (valid for 1 hour)
+   * @param {string} firstName - User's first name for email personalization
+   * @returns {Promise<void>}
+   * @throws {Error} If Resend API call fails or email cannot be sent
+   * 
+   * @example
+   * ```typescript
+   * try {
+   *   await emailService.sendPasswordResetEmail(
+   *     'user@example.com',
+   *     'abc123xyz789',
+   *     'Juan'
+   *   );
+   *   console.log('Reset email sent successfully');
+   * } catch (error) {
+   *   console.error('Failed to send email:', error);
+   * }
+   * ```
+   */
   async sendPasswordResetEmail(
     email: string,
     resetToken: string,
