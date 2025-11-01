@@ -246,14 +246,27 @@ export const VideoModal: React.FC<VideoModalProps> = ({
         onClick={onClose}
       />
       
-      <div className="relative w-full max-w-6xl mx-4 bg-zinc-900 rounded-lg overflow-hidden shadow-2xl">
+      <div className="relative w-full max-w-4xl mx-4 bg-zinc-900 rounded-lg overflow-hidden shadow-2xl">
         <Button
           variant="ghost"
           size="icon"
-          className="absolute top-4 right-4 z-10 bg-black/50 hover:bg-black/70 text-white rounded-full"
+          className="
+            absolute top-2 right-[1px] sm:top-4 sm:right-4 z-10 
+            bg-zinc-900/80 hover:bg-red-600/90
+            text-white hover:text-white
+            rounded-lg
+            backdrop-blur-sm
+            border border-zinc-700/50 hover:border-red-500/50
+            transition-all duration-200
+            cursor-pointer
+            hover:scale-110 active:scale-95
+            shadow-lg hover:shadow-red-500/30
+            h-6 w-6 sm:h-7 sm:w-7
+          "
           onClick={onClose}
+          aria-label="Cerrar"
         >
-          <X className="h-5 w-5" />
+          <X className="h-3 w-3 sm:h-4 sm:w-4" />
         </Button>
 
         {/* Mobile Tabs - Ahora incluye Ratings */}
@@ -608,20 +621,40 @@ export const VideoModal: React.FC<VideoModalProps> = ({
                     {/* Ratings Button */}
                     <Button
                       variant="ghost"
-                      className="w-full bg-zinc-800 hover:bg-yellow-500/20 border border-yellow-500/50 hover:border-yellow-500 text-yellow-400 flex items-center justify-center gap-2 mb-4 transition-all"
+                      className="
+                        w-full 
+                        bg-transparent hover:bg-yellow-500/10
+                        border border-yellow-500/30 hover:border-yellow-500/50
+                        text-yellow-400/90 hover:text-yellow-300
+                        font-medium
+                        flex items-center justify-center gap-2 
+                        mb-4 py-3
+                        transition-all duration-200
+                        cursor-pointer
+                      "
                       onClick={() => setShowRatingsDrawer(true)}
                     >
-                      <Star className="h-5 w-5" />
+                      <Star className="h-4 w-4" />
                       Ver calificaciones
                     </Button>
 
                     {/* Comments Button */}
                     <Button
                       variant="ghost"
-                      className="w-full bg-zinc-800 hover:bg-cyan-500/20 border border-cyan-500/50 hover:border-cyan-500 text-cyan-400 flex items-center justify-center gap-2 mb-6 transition-all"
+                      className="
+                        w-full 
+                        bg-transparent hover:bg-cyan-500/10
+                        border border-cyan-500/30 hover:border-cyan-500/50
+                        text-cyan-400/90 hover:text-cyan-300
+                        font-medium
+                        flex items-center justify-center gap-2 
+                        mb-6 py-3
+                        transition-all duration-200
+                        cursor-pointer
+                      "
                       onClick={() => setIsFlipped(true)}
                     >
-                      <MessageCircle className="h-5 w-5" />
+                      <MessageCircle className="h-4 w-4" />
                       Ver comentarios
                     </Button>
 

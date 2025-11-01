@@ -131,6 +131,24 @@ async function fetchAPI<T>(endpoint: string, params?: Record<string, string | nu
   }
 }
 
+// Función auxiliar para obtener el mejor archivo de video (prioriza 4K)
+function getBestVideoFile(files: VideoFile[] | undefined): VideoFile | null {
+  if (!files || files.length === 0) return null;
+
+  // Prioridad 1: Buscar exactamente 3840x2160 (4K)
+  const uhdFile = files.find(f => f.width === 3840 && f.height === 2160);
+  if (uhdFile) return uhdFile;
+
+  // Prioridad 2: Buscar la mayor resolución disponible
+  const sortedByResolution = [...files].sort((a, b) => {
+    const aPixels = a.width * a.height;
+    const bPixels = b.width * b.height;
+    return bPixels - aPixels; // Mayor a menor
+  });
+
+  return sortedByResolution[0] || null;
+}
+
 // Transformar datos de la API de tu backend a tu modelo interno
 function transformVideo(video: Video): Movie {
   // Crear un título a partir de los tags o usar un título genérico
@@ -138,10 +156,8 @@ function transformVideo(video: Video): Movie {
     ? video.tags.slice(0, 3).join(' • ')
     : `Video by ${video.user?.name || 'Unknown'}`;
 
-  // Obtener el archivo de mejor calidad (HD primero)
-  const hdFile = video.files?.find(f => f.quality === 'hd') 
-    || video.files?.find(f => f.quality === 'sd')
-    || video.files?.[0];
+  // Obtener el archivo de mejor calidad (prioriza 4K 3840x2160)
+  const bestFile = getBestVideoFile(video.files);
 
   return {
     id: String(video.id),
@@ -149,10 +165,10 @@ function transformVideo(video: Video): Movie {
     posterUrl: video.thumbnail || 'https://via.placeholder.com/400x600?text=No+Image',
     duration: video.duration || 0,
     tags: video.tags || [],
-    videoUrl: hdFile?.link || video.url || '',
+    videoUrl: bestFile?.link || video.url || '',
     user: video.user || { name: 'Unknown', url: '' },
-    width: video.width || 1920,
-    height: video.height || 1080,
+    width: bestFile?.width || video.width || 1920,
+    height: bestFile?.height || video.height || 1080,
   };
 }
 
@@ -229,6 +245,7 @@ export const videosAPI = {
 
   /**
    * Obtener video destacado para el hero banner
+   * Renderiza el video número 5 de los videos populares
    */
   async getFeatured(): Promise<{
     title: string;
@@ -237,16 +254,41 @@ export const videosAPI = {
     videoUrl?: string;
   } | null> {
     try {
-      const data = await fetchAPI<BackendResponse>('/popular', { per_page: 1 });
+      // Buscar suficientes videos para asegurar que tenemos al menos 5
+      const data = await fetchAPI<BackendResponse>('/popular', { per_page: 10 });
       
       if (!data || !data.success || !data.data?.videos || data.data.videos.length === 0) {
         console.warn('⚠️ No featured video available');
         return null;
       }
 
-      const video = data.data.videos[0];
-      const hdFile = video.files?.find(f => f.quality === 'hd') 
-        || video.files?.[0];
+      // Seleccionar el quinto video (índice 4)
+      const videoIndex = 4;
+      const video = data.data.videos[videoIndex];
+
+      if (!video) {
+        console.warn(`⚠️ Video at index ${videoIndex} not available`);
+        // Fallback al último video disponible
+        const fallbackVideo = data.data.videos[data.data.videos.length - 1];
+        if (!fallbackVideo) {
+          return null;
+        }
+        
+        const bestFile = getBestVideoFile(fallbackVideo.files);
+        return {
+          title: fallbackVideo.tags && fallbackVideo.tags[0] 
+            ? fallbackVideo.tags[0].charAt(0).toUpperCase() + fallbackVideo.tags[0].slice(1)
+            : 'Video Destacado',
+          description: fallbackVideo.tags && fallbackVideo.tags.length > 0
+            ? `Un increíble video de ${fallbackVideo.tags.slice(0, 3).join(', ')} por ${fallbackVideo.user?.name || 'Unknown'}. Duración: ${Math.floor(fallbackVideo.duration || 0)}s`
+            : `Video por ${fallbackVideo.user?.name || 'Unknown'}`,
+          backdropUrl: fallbackVideo.thumbnail,
+          videoUrl: bestFile?.link || fallbackVideo.url || '',
+        };
+      }
+
+      // Obtener el mejor archivo del video (prioriza 4K 3840x2160)
+      const bestFile = getBestVideoFile(video.files);
 
       return {
         title: video.tags && video.tags[0] 
@@ -256,7 +298,7 @@ export const videosAPI = {
           ? `Un increíble video de ${video.tags.slice(0, 3).join(', ')} por ${video.user?.name || 'Unknown'}. Duración: ${Math.floor(video.duration || 0)}s`
           : `Video por ${video.user?.name || 'Unknown'}`,
         backdropUrl: video.thumbnail,
-        videoUrl: hdFile?.link,
+        videoUrl: bestFile?.link || video.url || '',
       };
     } catch (error) {
       console.error('Error fetching featured video:', error);
