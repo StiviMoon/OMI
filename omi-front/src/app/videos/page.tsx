@@ -84,6 +84,7 @@ export default function VideosPage() {
               title={featured.title}
               description={featured.description}
               backdropUrl={featured.backdropUrl}
+              videoUrl={featured.videoUrl}
               onPlay={handleHeroPlay}
             />
           ) : null}
