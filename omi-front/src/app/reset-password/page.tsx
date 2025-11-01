@@ -83,9 +83,9 @@ const ResetPasswordContent = () => {
   const isFormDisabled = isLoading || !token;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="bg-gray-900/95 backdrop-blur-md rounded-lg shadow-2xl border border-gray-800 p-8">
+        <div className="bg-zinc-900/95 backdrop-blur-md rounded-lg shadow-2xl border border-white/5 p-8">
           {!success ? (
             <>
               <div className="flex justify-center mb-6">
@@ -118,7 +118,7 @@ const ResetPasswordContent = () => {
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full px-4 py-3 pr-12 bg-gray-800/50 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                      className="w-full px-4 py-3 pr-12 bg-white/5 border border-white/10 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
                       placeholder="••••••••"
                       required
                       minLength={MIN_PASSWORD_LENGTH}
@@ -147,7 +147,7 @@ const ResetPasswordContent = () => {
                       type={showConfirmPassword ? 'text' : 'password'}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full px-4 py-3 pr-12 bg-gray-800/50 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                      className="w-full px-4 py-3 pr-12 bg-white/5 border border-white/10 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
                       placeholder="••••••••"
                       required
                       disabled={isFormDisabled}
@@ -167,7 +167,7 @@ const ResetPasswordContent = () => {
                 <Button
                   type="submit"
                   disabled={isFormDisabled}
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-3 rounded-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-700 hover:to-cyan-600 text-white font-semibold py-3 rounded-md transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-cyan-500/30"
                 >
                   {isLoading ? 'RESTABLECIENDO...' : 'RESTABLECER CONTRASEÑA'}
                 </Button>
@@ -217,9 +217,9 @@ const ResetPasswordContent = () => {
 };
 
 const LoadingFallback = () => (
-  <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center">
+  <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black flex items-center justify-center">
     <div className="text-white text-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4" />
+      <div className="animate-spin rounded-full h-12 w-12 border-4 border-cyan-400 border-t-transparent mx-auto mb-4" />
       <p>Cargando...</p>
     </div>
   </div>

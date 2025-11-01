@@ -20,7 +20,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onVideoSelect }) => {
   // Determinar el item activo basado en la ruta actual
   const getActiveItem = useCallback(() => {
     if (pathname === '/videos') return 'PELICULA';
-    if (pathname === '/historial') return 'HISTORIAL';
     if (pathname === '/fav') return 'FAVORITOS';
     return 'PELICULA'; // Default
   }, [pathname]);
@@ -60,9 +59,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onVideoSelect }) => {
       case 'FAVORITOS':
         router.push('/fav');
         break;
-      case 'HISTORIAL':
-        // router.push('/historial'); // Descomentar cuando tengas la ruta
-        break;
       default:
         break;
     }
@@ -76,7 +72,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onVideoSelect }) => {
   ];
 
   const bottomItems = [
-    { icon: <History className="w-5 h-5" />, label: 'HISTORIAL' },
     { icon: <User className="w-5 h-5" />, label: 'CUENTA' },
   ];
 
@@ -85,7 +80,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onVideoSelect }) => {
       {/* Mobile Menu Button - Solo visible en mobile */}
       <button
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        className="md:hidden fixed top-4 left-4 z-50 p-2 bg-black/80 rounded-lg border border-gray-800 hover:bg-gray-900 transition-colors"
+        className="md:hidden fixed top-4 left-[380px] z-50 p-2 bg-black/80 rounded-lg border border-gray-800 hover:bg-gray-900 transition-colors"
         aria-label="Toggle menu"
       >
         {isMobileMenuOpen ? (
@@ -118,9 +113,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onVideoSelect }) => {
             <Image 
               src="/logo.png" 
               alt="Logo" 
-              width={64}
-              height={64}
-              className="w-12 h-12 md:w-10 md:h-10 lg:w-16 lg:h-16 object-contain cursor-pointer hover:opacity-80 transition-opacity"
+              width={200}
+              height={200}
+              className="object-contain cursor-pointer hover:opacity-80 transition-opacity"
               priority
               onClick={() => {
                 router.push('/videos');

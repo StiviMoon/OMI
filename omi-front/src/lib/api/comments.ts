@@ -1,4 +1,5 @@
 // Comments API client
+// In Next.js, NEXT_PUBLIC_ variables are available in client components
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 const API_BASE = `${API_URL}/api/comments`;
 
@@ -77,7 +78,9 @@ export const commentsAPI = {
    */
   list: async (videoLink: string): Promise<BackendComment[]> => {
     const encodedLink = encodeURIComponent(videoLink);
-    const response = await fetch(`${API_BASE}/video?videoLink=${encodedLink}`, {
+    const url = `${API_BASE}/video?videoLink=${encodedLink}`;
+    
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

@@ -753,9 +753,9 @@ export default function ModalCuenta({ isOpen, onClose }: ModalCuentaProps) {
 
           <div className="flex-1 w-full">
             
-            <div className="flex justify-center lg:justify-end mb-4 sm:mb-6">
+            <div className="flex justify-center mb-4 sm:mb-6">
               <div 
-                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-white/40 flex items-center justify-center"
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-white/40 flex items-center justify-center bg-zinc-800/50"
                 aria-label="Foto de perfil"
               >
                 <UserIcon className="w-8 h-8 sm:w-10 sm:h-10 text-white" strokeWidth={1.5} />

@@ -1,9 +1,29 @@
 import { Rating } from '../entities/rating.entity';
 
+export interface RatingStats {
+  averageRating: number;
+  totalRatings: number;
+  distribution: {
+    1: number;
+    2: number;
+    3: number;
+    4: number;
+    5: number;
+  };
+}
+
 export interface IRatingRepository {
-  addRating(userId: string, pexelsId: string, score: number, comment: string): Promise<Rating>;
-  getRatingsByPexelsId(pexelsId: string): Promise<Rating[]>;
-  getUserRating(userId: string, pexelsId: string): Promise<Rating | null>;
-  updateRating(userId: string, pexelsId: string, score: number, comment: string): Promise<boolean>;
-  deleteRating(userId: string, pexelsId: string): Promise<boolean>;
+  addOrUpdateRating(
+    userId: string,
+    videoLink: string,
+    score: number,
+    userFirstName?: string,
+    userLastName?: string,
+    userEmail?: string
+  ): Promise<Rating>;
+  getRatingsByVideo(videoLink: string): Promise<Rating[]>;
+  getRatingStats(videoLink: string): Promise<RatingStats>;
+  getUserRatingForVideo(userId: string, videoLink: string): Promise<Rating | null>;
+  deleteRating(ratingId: string, userId: string): Promise<boolean>;
+  getUserRatings(userId: string): Promise<Rating[]>;
 }

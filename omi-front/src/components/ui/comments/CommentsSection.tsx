@@ -157,7 +157,7 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ videoLink }) =
           <p className="text-gray-400 text-sm">No hay comentarios aún. ¡Sé el primero en comentar!</p>
         </div>
       ) : (
-        <div className="space-y-4 max-h-96 overflow-y-auto">
+        <div className="space-y-4">
           {comments.map((comment) => (
             <div key={comment.id} className="bg-zinc-800 rounded-lg p-4">
               <div className="flex items-start justify-between mb-2">
