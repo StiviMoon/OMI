@@ -18,14 +18,14 @@ import { EmailService } from '../infrastructure/services/email.service';
 import { FavoritesController } from './controllers/favorites.controller';
 import { RatingsController } from './controllers/ratings.controller';
 import { MongoFavoriteRepository } from '../infrastructure/repositories/mongo-favorite.repository';
-import { RatingRepositoryImpl } from '../infrastructure/repositories/mongo-rating.repository';
+import { MongoRatingRepository } from '../infrastructure/repositories/mongo-rating.repository';
 import { ListFavoritesUseCase } from '../domain/use-cases/list-favorite.use-case';
 import { AddFavoriteUseCase } from '../domain/use-cases/add-favorite.use-case';
 import { RemoveFavoriteUseCase } from '../domain/use-cases/remove-favorite.use-case';
 import { IsFavoriteUseCase } from '../domain/use-cases/is-favorite.use-case';
-import { GetRatingsUseCase } from '../domain/use-cases/get.rating.use-case';
-import { AddRatingUseCase } from '../domain/use-cases/add-rating.use-case';
-import { UpdateRatingUseCase } from '../domain/use-cases/update-rating.use-case';
+import { GetRatingStatsUseCase } from '../domain/use-cases/get-rating-stats.use-case';
+import { GetUserRatingUseCase } from '../domain/use-cases/get-user-rating.use-case';
+import { AddOrUpdateRatingUseCase } from '../domain/use-cases/add-or-update-rating.use-case';
 import { DeleteRatingUseCase } from '../domain/use-cases/delete-rating.use-case';
 import { AddCommentUseCase } from '../domain/use-cases/add-comment.use-case';
 import { ListCommentsUseCase } from '../domain/use-cases/list-comments.use-case';
@@ -34,7 +34,7 @@ import { DeleteCommentUseCase } from '../domain/use-cases/delete-comment.use-cas
 import { MongoCommentRepository } from '../infrastructure/repositories/mongo-comment.repository';
 import { CommentsController } from './controllers/comments.controller';
 import createFavoritesRoutes from './routes/favorites.routes';
-import createRatingsRoutes from './routes/ratings.routes';
+import createRatingsRoutes from '../presentation/routes/ratings.routes';
 import createCommentsRoutes from './routes/comments.routes';
 
 export class App {
@@ -42,6 +42,7 @@ export class App {
 
   constructor() {
     this.app = express();
+    
     this.setupMiddleware();
     this.setupRoutes();
     this.setupErrorHandling();
@@ -51,7 +52,7 @@ export class App {
     // Repositories
     const userRepository = new MongoUserRepository();
     const favoriteRepository = new MongoFavoriteRepository();
-    const ratingRepository = new RatingRepositoryImpl();
+    const ratingRepository = new MongoRatingRepository();
     const commentRepository = new MongoCommentRepository();
 
     // Services
@@ -73,9 +74,9 @@ export class App {
     const isFavoriteUseCase = new IsFavoriteUseCase(favoriteRepository);
 
     // Ratings use cases
-    const getRatingsUseCase = new GetRatingsUseCase(ratingRepository);
-    const addRatingUseCase = new AddRatingUseCase(ratingRepository);
-    const updateRatingUseCase = new UpdateRatingUseCase(ratingRepository);
+    const addOrUpdateRatingUseCase = new AddOrUpdateRatingUseCase(ratingRepository);
+    const getRatingStatsUseCase = new GetRatingStatsUseCase(ratingRepository);
+    const getUserRatingUseCase = new GetUserRatingUseCase(ratingRepository);
     const deleteRatingUseCase = new DeleteRatingUseCase(ratingRepository);
 
     // Comments use cases
@@ -105,10 +106,11 @@ export class App {
     );
 
     const ratingsController = new RatingsController(
-      getRatingsUseCase,
-      addRatingUseCase,
-      updateRatingUseCase,
-      deleteRatingUseCase
+      addOrUpdateRatingUseCase,
+      getRatingStatsUseCase,
+      getUserRatingUseCase,
+      deleteRatingUseCase,
+      userRepository
     );
 
     const commentsController = new CommentsController(
@@ -124,6 +126,8 @@ export class App {
     this.app.use('/api/videos', createPexelsRoutes(pexelsController));
     this.app.use('/api/favorites', createFavoritesRoutes(favoritesController));
     this.app.use('/api/ratings', createRatingsRoutes(ratingsController));
+    
+    // Register comments routes
     this.app.use('/api/comments', createCommentsRoutes(commentsController));
 
     this.app.get('/', (req, res) => {

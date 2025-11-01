@@ -5,10 +5,13 @@ import { authenticateToken } from '../middleware/auth.middleware';
 const createRatingsRoutes = (ratingsController: RatingsController): Router => {
   const router = Router();
 
-  router.get('/:pexelsId', authenticateToken, ratingsController.list.bind(ratingsController));
-  router.post('/', authenticateToken, ratingsController.add.bind(ratingsController));
-  router.put('/:userId/:pexelsId', authenticateToken, ratingsController.update.bind(ratingsController));
-  router.delete('/:userId/:pexelsId', authenticateToken, ratingsController.remove.bind(ratingsController));
+  // Public route - anyone can view rating stats
+  router.get('/stats', ratingsController.getStats.bind(ratingsController));
+
+  // Protected routes - require authentication
+  router.post('/', authenticateToken, ratingsController.addOrUpdate.bind(ratingsController));
+  router.get('/user', authenticateToken, ratingsController.getUserRating.bind(ratingsController));
+  router.delete('/:ratingId', authenticateToken, ratingsController.delete.bind(ratingsController));
 
   return router;
 };
